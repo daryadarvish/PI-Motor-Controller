@@ -2,16 +2,11 @@
 ;* Lab5 Main [includes LibV2.1]                                                       *
 ;**************************************************************************************
 ;* Summary:                                                                           *
-;*   -                                                                                *
+;*   PI Motor Controller for a DC Motor, Keypad and Display Firmware                  *
 ;*                                                                                    *
 ;* Author: Darya Darvish, Kellen Fujishin                                             *
 ;*   Cal Poly University                                                              *
 ;*   Fall 2019                                                                        *
-;*                                                                                    *
-;* Revision History:                                                                  *
-;*   -                                                                                *
-;*                                                                                    *
-;* ToDo:                                                                              *
 ;*                                                                                    *
 ;**************************************************************************************
 
@@ -52,7 +47,6 @@
 
 PORTT         EQU     $0240
 DDRT          EQU     $0242
-
 TIOS          EQU     $0040
 TCNT          EQU     $0044
 TSCR          EQU     $0046
@@ -60,7 +54,6 @@ TCTL2         EQU     $0049
 TMSK1         EQU     $004C
 TFLG1         EQU     $004E
 TC0           EQU     $0050
-
 
 
 ;/------------------------------------------------------------------------------------\
@@ -523,7 +516,7 @@ VREF_EXIT:
 KP_CONVERSION:
         pshb                           	;pushes contents of b to the stack
         pshy                           	;pushes contents of y to the stack
-        movw  #LKP_BUF, POINTER       ;move address of buffer into pointer
+        movw  #LKP_BUF, POINTER         ;move address of buffer into pointer
         movb  DIGIT_COUNT, COUNT       	;sets COUNT to however many digits are loaded
         clrw  KP                      	;clears KP
 
@@ -641,7 +634,7 @@ VREF_DIGITS:
         bne   VREF_CONTD1               ;branch to continue
         tst   TAKE2COMP                 ;tests if twos complement is to be taken
         bne   VREF_CONTD1               ;if not, branch to continue
-        movb  #$20,V_REF_BUF           ;move blank space into VREF buffer
+        movb  #$20,V_REF_BUF            ;move blank space into VREF buffer
         
 VREF_CONTD1:
         ldaa  KEY_BUF                  	;loads the digit
@@ -777,7 +770,7 @@ KI_1:
         lbne  INVALIDENTRY              ;invalid if pressed already
         clr   RUN                       ;turn off motor
         movb  #$01,D_STP                ;display STP
-        ldx   #LKI_BUF                 ;loads Buffer into accumulator 
+        ldx   #LKI_BUF                  ;loads Buffer into accumulator 
         movb  #$20,0,x                 	;set ascii input
         movb  #$20,1,x                 	;set ascii input
         movb  #$20,2,x                 	;set ascii input
