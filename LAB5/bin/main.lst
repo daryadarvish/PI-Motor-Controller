@@ -1,0 +1,1633 @@
+
+Freescale HC12-Assembler 
+(c) Copyright Freescale 1987-2010
+
+ Abs. Rel.   Loc    Obj. code   Source line
+ ---- ----   ------ ---------   -----------
+    1    1                      ;**************************************************************************************
+    2    2                      ;* Lab5 Main [includes LibV2.1]                                                       *
+    3    3                      ;**************************************************************************************
+    4    4                      ;* Summary:                                                                           *
+    5    5                      ;*   -                                                                                *
+    6    6                      ;*                                                                                    *
+    7    7                      ;* Author: Darya Darvish, Kellen Fujishin                                             *
+    8    8                      ;*   Cal Poly University                                                              *
+    9    9                      ;*   Fall 2019                                                                        *
+   10   10                      ;*                                                                                    *
+   11   11                      ;* Revision History:                                                                  *
+   12   12                      ;*   -                                                                                *
+   13   13                      ;*                                                                                    *
+   14   14                      ;* ToDo:                                                                              *
+   15   15                      ;*                                                                                    *
+   16   16                      ;**************************************************************************************
+   17   17                      
+   18   18                      ;/------------------------------------------------------------------------------------\
+   19   19                      ;| Include all associated files                                                       |
+   20   20                      ;\------------------------------------------------------------------------------------/
+   21   21                      ; The following are external files to be included during assembly
+   22   22                      
+   23   23                      
+   24   24                      ;/------------------------------------------------------------------------------------\
+   25   25                      ;| External Definitions                                                               |
+   26   26                      ;\------------------------------------------------------------------------------------/
+   27   27                      ; All labels that are referenced by the linker need an external definition
+   28   28                      
+   29   29                                    XDEF  main
+   30   30                      
+   31   31                      ;/------------------------------------------------------------------------------------\
+   32   32                      ;| External References                                                                |
+   33   33                      ;\------------------------------------------------------------------------------------/
+   34   34                      ; All labels from other files must have an external reference
+   35   35                      
+   36   36                                    XREF  ENABLE_MOTOR, DISABLE_MOTOR
+   37   37                                    XREF  STARTUP_MOTOR, UPDATE_MOTOR, CURRENT_MOTOR
+   38   38                                    XREF  STARTUP_PWM, STARTUP_ATD0, STARTUP_ATD1
+   39   39                                    XREF  OUTDACA, OUTDACB
+   40   40                                    XREF  STARTUP_ENCODER, READ_ENCODER
+   41   41                                    XREF  INITLCD, SETADDR, GETADDR, CURSOR_ON, CURSOR_OFF, DISP_OFF
+   42   42                                    XREF  OUTCHAR, OUTCHAR_AT, OUTSTRING, OUTSTRING_AT
+   43   43                                    XREF  INITKEY, LKEY_FLG, GETCHAR
+   44   44                                    XREF  LCDTEMPLATE, UPDATELCD_L1, UPDATELCD_L2
+   45   45                                    XREF  LVREF_BUF, LVACT_BUF, LERR_BUF,LEFF_BUF, LKP_BUF, LKI_BUF
+   46   46                                    XREF  Entry, ISR_KEYPAD
+   47   47                                  
+   48   48                      ;/------------------------------------------------------------------------------------\
+   49   49                      ;| Assembler Equates                                                                  |
+   50   50                      ;\------------------------------------------------------------------------------------/
+   51   51                      ; Constant values can be equated here
+   52   52                      
+   53   53          0000 0240   PORTT         EQU     $0240
+   54   54          0000 0242   DDRT          EQU     $0242
+   55   55                      
+   56   56          0000 0040   TIOS          EQU     $0040
+   57   57          0000 0044   TCNT          EQU     $0044
+   58   58          0000 0046   TSCR          EQU     $0046
+   59   59          0000 0049   TCTL2         EQU     $0049
+   60   60          0000 004C   TMSK1         EQU     $004C
+   61   61          0000 004E   TFLG1         EQU     $004E
+   62   62          0000 0050   TC0           EQU     $0050
+   63   63                      
+   64   64                      
+
+Freescale HC12-Assembler 
+(c) Copyright Freescale 1987-2010
+
+ Abs. Rel.   Loc    Obj. code   Source line
+ ---- ----   ------ ---------   -----------
+   65   65                      
+   66   66                      ;/------------------------------------------------------------------------------------\
+   67   67                      ;| Variables in RAM                                                                   |
+   68   68                      ;\------------------------------------------------------------------------------------/
+   69   69                      ; The following variables are located in unpaged ram
+   70   70                      
+   71   71                      DEFAULT_RAM:  SECTION
+   72   72                      
+   73   73   000000             MOTOR_STATE       DS.B  1 ;state of motor
+   74   74   000001             TC0_STATE         DS.B  1 ;state of interrupt
+   75   75   000002             dispstate         DS.B  1	;state of display
+   76   76   000003             KEYPAD_STATE      DS.B  1	;state of keypad
+   77   77   000004             MASTERMIND_STATE  DS.B  1	;state of M^2
+   78   78                      
+   79   79   000005             KEY_BUF           DS.B  1	;contains key to be analyzed
+   80   80   000006             KEY_FLG           DS.B  1	;raised when keypad registers a key input
+   81   81   000007             INTERVAL          DS.W  1	;used to define the period of interrupts
+   82   82   000009             RUN               DS.B  1 ;boolean to tell the 
+   83   83   00000A             D_ON_D_OFF        DS.B  1 ;tells ISR to count down to updating the display or not
+   84   84   00000B             V_REF             DS.W  1 ;reference velocity imputed by user 
+   85   85   00000D             V_REF_BUF         DS.B  4 ;variable to temporarily store a new VREF
+   86   86   000011             V_ACT             DS.W  1 ;actual velocity of the motor
+   87   87   000013             VREF_PROMPT       DS.B  1 ;M^2 flag that signifies a new VREF is being imputed
+   88   88   000014             VREF_CURSOR       DS.B  1 ;display flag to place cursor at the VREF prompt
+   89   89   000015             KP                DS.W  1 ;gain value for KP
+   90   90   000017             KP_PROMPT         DS.B  1 ;M^2 flag that signifies a new KP value is being imputed
+   91   91   000018             KP_CURSOR         DS.B  1 ;display flag to place cursor at the KP prompt
+   92   92   000019             KI                DS.W  1 ;gain value for KP
+   93   93   00001B             KI_PROMPT         DS.B  1 ;M^2 flag that signifies a new KI value is being imputed
+   94   94   00001C             KI_CURSOR         DS.B  1 ;display flag to place cursor at the KP prompt
+   95   95   00001D             FIRSTCHAR         DS.B  1 ;signifies that the first character of a message is to be printed
+   96   96   00001E             TAKE2COMP         DS.B  1 ;is VREF negative or not
+   97   97   00001F             OL_CL             DS.B  1 ;open loop or closed loop
+   98   98   000020             BACKSPACEDISP     DS.B  1	;tells code to print a backspace
+   99   99   000021             POINTER           DS.W  1 ;address pointer for buffers
+  100  100   000023             ECHO              DS.B  1 ;tells display to echo an entered digit
+  101  101   000024             COUNT             DS.B  1 ;how many digits have been converted
+  102  102   000025             DIGIT_COUNT       DS.B  1 ;how many digits have been entered
+  103  103   000026             DPTR              DS.W  1 ;points to character of message to be displayed
+  104  104   000028             D_VREF            DS.B  1 ;display flag to display the VREF prompt
+  105  105   000029             D_KP              DS.B  1 ;display flag to display the KP prompt
+  106  106   00002A             D_KI              DS.B  1 ;display flag to display the KI prompt
+  107  107                      
+  108  108   00002B             D_RUN             DS.B  1 ;displays RUN
+  109  109   00002C             D_STP             DS.B  1 ;displays STP
+  110  110   00002D             D_CL              DS.B  1 ;displays CL
+  111  111   00002E             D_OL              DS.B  1 ;displays OL
+  112  112   00002F             D_D_ON            DS.B  1 ;displays D_ON
+  113  113   000030             D_D_OFF           DS.B  1 ;displays D_OFF
+  114  114   000031             UPDATEDISPLAY     DS.B  1 ;tells M^2 to update Line 1
+  115  115                      
+  116  116   000032             ENCODER_COUNT     DS.W  1 ;motor position
+  117  117   000034             ENCODER_COUNT_OLD DS.W  1 ;previous motor position
+  118  118   000036             KP_ERR            DS.W  1 ;used for SDBA to obtain a  
+  119  119   000038             KI_ERR            DS.W  1 ;used for SDBA to obtain a
+  120  120   00003A             ESUM              DS.W  1 ;sum of error values
+  121  121   00003C             A_STAR            DS.W  1 ;duty cycle to be outputed to the motor
+  122  122   00003E             A_INIT            DS.W  1 ;first a value
+  123  123   000040             ERR               DS.W  1 ;difference between VREF and VACT
+  124  124   000042             ESUM_OLD          DS.W  1 ;previous ESUM
+  125  125   000044             EFFORT            DS.W  1 ;effort needed by the motor
+  126  126   000046             TEMP1             DS.W  1 ;quotient of the BCD2ASCII conversion
+  127  127   000048             UPDATECOUNT       DS.B  1 ;counts down to update the display every 255 interrupts
+  128  128   000049             TEMPADDR          DS.B  1 ;stores the LCD address before updating
+
+Freescale HC12-Assembler 
+(c) Copyright Freescale 1987-2010
+
+ Abs. Rel.   Loc    Obj. code   Source line
+ ---- ----   ------ ---------   -----------
+  129  129   00004A             REMAIN            DS.W  1 ;used to calculate effort
+  130  130                      
+  131  131                      
+  132  132                      ;/------------------------------------------------------------------------------------\
+  133  133                      ;|  Main Program Code                                                                 |
+  134  134                      ;\------------------------------------------------------------------------------------/
+  135  135                      ; Your code goes here
+  136  136                      
+  137  137                      MyCode:       SECTION
+  138  138                      
+  139  139                      main:     
+  140  140   000000 79xx xx             clr     MOTOR_STATE               ;clearing of variables              
+  141  141   000003 79xx xx             clr     TC0_STATE        
+  142  142   000006 79xx xx             clr     LKEY_FLG
+  143  143   000009 79xx xx             clr     TC0_STATE
+  144  144   00000C 79xx xx             clr     dispstate
+  145  145   00000F 79xx xx             clr     KEYPAD_STATE
+  146  146   000012 79xx xx             clr     MASTERMIND_STATE
+  147  147   000015 79xx xx             clr     VREF_PROMPT
+  148  148   000018 79xx xx             clr     VREF_CURSOR
+  149  149   00001B 79xx xx             clr     KP_PROMPT
+  150  150   00001E 79xx xx             clr     KP_CURSOR
+  151  151   000021 79xx xx             clr     KI_PROMPT
+  152  152   000024 79xx xx             clr     KI_CURSOR
+  153  153   000027 79xx xx             clr     TAKE2COMP
+  154  154                              
+  155  155   00002A 79xx xx             clr     ECHO
+  156  156   00002D 79xx xx             clr     COUNT
+  157  157   000030 79xx xx             clr     DIGIT_COUNT
+  158  158   000033 79xx xx             clr     D_VREF
+  159  159   000036 79xx xx             clr     D_KP
+  160  160   000039 79xx xx             clr     D_KI
+  161  161   00003C 79xx xx             clr     D_D_OFF
+  162  162   00003F 79xx xx             clr     D_OL
+  163  163   000042 79xx xx             clr     D_RUN
+  164  164   000045 79xx xx             clr     BACKSPACEDISP
+  165  165   000048 79xx xx             clr     UPDATEDISPLAY
+  166  166   00004B 79xx xx             clr     RUN
+  167  167                               
+  168  168                             
+  169  169   00004E 180B 01xx           movb    #$01, FIRSTCHAR
+             000052 xx         
+  170  170                      ;-------------------------------BUFFER_SET_TO_0----------------------------        
+  171  171   000053 CExx xx             ldx     #LVREF_BUF
+  172  172   000056 1808 0020           movb    #$20,0,x                 	;set ascii input
+  173  173   00005A 1808 0120           movb    #$20,1,x                 	;set ascii input
+  174  174   00005E 1808 0220           movb    #$20,2,x                 	;set ascii input
+  175  175   000062 1808 0320           movb    #$20,3,x                 	;set ascii input
+  176  176   000066 1808 0420           movb    #$20,4,x                 	;set ascii input
+  177  177   00006A CExx xx             ldx     #LVACT_BUF
+  178  178   00006D 1808 0020           movb    #$20,0,x                 	;set ascii input
+  179  179   000071 1808 0120           movb    #$20,1,x                 	;set ascii input
+  180  180   000075 1808 0220           movb    #$20,2,x                 	;set ascii input
+  181  181   000079 1808 0320           movb    #$20,3,x                 	;set ascii input
+  182  182   00007D 1808 0420           movb    #$20,4,x                 	;set ascii input
+  183  183   000081 CExx xx             ldx     #LERR_BUF
+  184  184   000084 1808 0020           movb    #$20,0,x                 	;set ascii input
+  185  185   000088 1808 0120           movb    #$20,1,x                 	;set ascii input
+  186  186   00008C 1808 0220           movb    #$20,2,x                 	;set ascii input
+  187  187   000090 1808 0320           movb    #$20,3,x                 	;set ascii input
+  188  188   000094 1808 0420           movb    #$20,4,x                 	;set ascii input
+  189  189   000098 CExx xx             ldx     #LEFF_BUF
+  190  190   00009B 1808 0020           movb    #$20,0,x                 	;set ascii input
+  191  191   00009F 1808 0120           movb    #$20,1,x                 	;set ascii input
+
+Freescale HC12-Assembler 
+(c) Copyright Freescale 1987-2010
+
+ Abs. Rel.   Loc    Obj. code   Source line
+ ---- ----   ------ ---------   -----------
+  192  192   0000A3 1808 0220           movb    #$20,2,x                 	;set ascii input
+  193  193   0000A7 1808 0320           movb    #$20,3,x                 	;set ascii input
+  194  194   0000AB 1808 0420           movb    #$20,4,x                 	;set ascii input
+  195  195   0000AF CExx xx             ldx     #LKP_BUF
+  196  196   0000B2 1808 0020           movb    #$20,0,x                 	;set ascii input
+  197  197   0000B6 1808 0120           movb    #$20,1,x                 	;set ascii input
+  198  198   0000BA 1808 0220           movb    #$20,2,x                 	;set ascii input
+  199  199   0000BE 1808 0320           movb    #$20,3,x                 	;set ascii input
+  200  200   0000C2 1808 0420           movb    #$20,4,x                 	;set ascii input
+  201  201   0000C6 CExx xx             ldx     #LKI_BUF
+  202  202   0000C9 1808 0020           movb    #$20,0,x                 	;set ascii input
+  203  203   0000CD 1808 0120           movb    #$20,1,x                 	;set ascii input
+  204  204   0000D1 1808 0220           movb    #$20,2,x                 	;set ascii input
+  205  205   0000D5 1808 0320           movb    #$20,3,x                 	;set ascii input
+  206  206   0000D9 1808 0420           movb    #$20,4,x                 	;set ascii input
+  207  207                      ;-----------------------------------------------------------------------------        
+  208  208   0000DD 1879 xxxx           clrw    EFFORT                    ;clearing of variables cont'd
+  209  209   0000E1 1879 xxxx           clrw    ERR
+  210  210   0000E5 1879 xxxx           clrw    V_ACT                                
+  211  211   0000E9 1879 xxxx           clrw    V_REF
+  212  212   0000ED 1879 xxxx           clrw    KI
+  213  213   0000F1 1879 xxxx           clrw    KP
+  214  214                              
+  215  215   0000F5 1803 4E20           movw    #20000, INTERVAL		      ;sets interval to correspond with 0.2ms
+             0000F9 xxxx       
+  216  216   0000FB 1879 xxxx           clrw    ENCODER_COUNT_OLD         ;clearing and setting of variables
+  217  217   0000FF 1879 xxxx           clrw    ESUM
+  218  218   000103 1879 xxxx           clrw    ESUM_OLD
+  219  219   000107 1879 xxxx           clrw    EFFORT
+  220  220   00010B 79xx xx             clr     RUN 
+  221  221   00010E 180B 01xx           movb    #$01,OL_CL
+             000112 xx         
+  222  222   000113 180B 01xx           movb    #$01,D_ON_D_OFF
+             000117 xx         
+  223  223   000118 180B FFxx           movb    #255,UPDATECOUNT
+             00011C xx         
+  224  224                              
+  225  225                              
+  226  226   00011D 180B 01xx           movb    #$01,D_D_ON
+             000121 xx         
+  227  227   000122 180B 01xx           movb    #$01,D_CL
+             000126 xx         
+  228  228   000127 180B 01xx           movb    #$01,D_STP
+             00012B xx         
+  229  229                              
+  230  230                      Top:
+  231  231   00012C 16xx xx             jsr MOTOR                         ;execute tasks endlessly
+  232  232   00012F 16xx xx             jsr TC0_
+  233  233   000132 16xx xx             jsr MASTERMIND
+  234  234   000135 16xx xx             jsr KEYPAD
+  235  235   000138 16xx xx             jsr DISPLAY
+  236  236                              
+  237  237   00013B 20EF                bra Top
+  238  238                              
+  239  239                      ;-------------TASK_1 - MOTOR_INIT ----------------------------------------------------------
+  240  240                      
+  241  241                      MOTOR:
+  242  242   00013D B6xx xx             ldaa MOTOR_STATE                  ;execute states in order
+  243  243   000140 2703                beq  MOTOR_STATE_1                
+  244  244   000142 43                  deca
+  245  245   000143 2715                beq  MOTOR_STATE_2
+  246  246                              
+  247  247                      MOTOR_STATE_1:
+  248  248   000145 1879 xxxx           clrw  ENCODER_COUNT               ;clear ENCODER_COUNT
+
+Freescale HC12-Assembler 
+(c) Copyright Freescale 1987-2010
+
+ Abs. Rel.   Loc    Obj. code   Source line
+ ---- ----   ------ ---------   -----------
+  249  249   000149 16xx xx             jsr   STARTUP_PWM                 ;startup procedure for motor
+  250  250   00014C 16xx xx             jsr   STARTUP_MOTOR
+  251  251   00014F 16xx xx             jsr   ENABLE_MOTOR
+  252  252   000152 16xx xx             jsr   STARTUP_ENCODER             ;startup for motor
+  253  253   000155 180B 01xx           movb  #$01, MOTOR_STATE           ;initialization finished
+             000159 xx         
+  254  254                              
+  255  255                      MOTOR_STATE_2:                            ;task completed
+  256  256   00015A 3D                  rts
+  257  257                      
+  258  258                             
+  259  259                      ;-------------TASK_1 - TC0----------------------------------------------------------
+  260  260                      
+  261  261                      TC0_:
+  262  262   00015B B6xx xx             ldaa  TC0_STATE                 ;execute states in order
+  263  263   00015E 2703                beq   TC0_STATE_0		            ;initialization of interrupts
+  264  264   000160 43                  deca  
+  265  265   000161 2721                beq   TC0_STATE_1
+  266  266                      
+  267  267                      TC0_STATE_0:
+  268  268   000163 4C40 01             bset    TIOS,  $01            	;sets IOS0
+  269  269   000166 4C49 01             bset    TCTL2, $01            	;TE (Timer Enable)
+  270  270   000169 4D49 02             bclr    TCTL2, $02            	;TE (Timer Enable)
+  271  271   00016C 4C4E 01             bset    TFLG1, $01            	;C0I (Channel Interrupt Mask Request Enabled)
+  272  272                              
+  273  273   00016F 10EF                cli
+  274  274                              
+  275  275   000171 4C4C 01             bset    TMSK1, $01            	;toggles OM0 and OL0
+  276  276   000174 4C46 A0             bset    TSCR, $A0               ;stores 10 in TSCR
+  277  277                                    
+  278  278   000177 DC44                ldd     TCNT                 	  ;Stores Timer Channel 0 Register in D
+  279  279   000179 F3xx xx             addd    INTERVAL              	;adds contents of interval to contents of D
+  280  280   00017C 5C50                std     TC0                   	;stores contents of d in timer channel 0 register
+  281  281   00017E 180B 01xx           movb    #$01, TC0_STATE		      ;After initialization, this task does not do anything else
+             000182 xx         
+  282  282   000183 3D                  rts
+  283  283                      
+  284  284                      TC0_STATE_1:
+  285  285   000184 3D                  rts                             ;task completed       
+  286  286                      
+  287  287                      ;-------------TASK_2 MASTERMIND-----------------------------------------------------
+  288  288                      
+  289  289                      MASTERMIND:
+  290  290   000185 B6xx xx             ldaa  MASTERMIND_STATE		      ;execute states in order
+  291  291   000188 2706                beq   MASTERMIND_INIT
+  292  292   00018A 43                  deca  
+  293  293   00018B 2717                beq   MASTERMIND_WAIT_FOR_DISPLAY
+  294  294   00018D 43                  deca  
+  295  295   00018E 272C                beq   MASTERMIND_HUB
+  296  296                                  
+  297  297                      MASTERMIND_INIT:  
+  298  298   000190 79xx xx             clr   KEYPAD			              ;initialize keypad
+  299  299   000193 16xx xx             jsr   INITLCD			              ;initialize the LCD
+  300  300   000196 16xx xx             jsr   LCDTEMPLATE               ;initialize LCD template
+  301  301   000199 180B 01xx           movb  #$01, MASTERMIND_STATE	  ;move to WAITING state
+             00019D xx         
+  302  302   00019E 180B 01xx           MOVB  #$01, FIRSTCHAR           ;intialize FIRSTCHAR to 1
+             0001A2 xx         
+  303  303   0001A3 3D                  rts        
+  304  304                      MASTERMIND_WAIT_FOR_DISPLAY:
+  305  305   0001A4 F7xx xx             tst   D_STP                     ;wait for STP to display
+  306  306   0001A7 2701                beq   DISPLAYCHECK_2            ;if completed, branch to next check
+  307  307   0001A9 3D                  rts
+  308  308                      DISPLAYCHECK_2:
+
+Freescale HC12-Assembler 
+(c) Copyright Freescale 1987-2010
+
+ Abs. Rel.   Loc    Obj. code   Source line
+ ---- ----   ------ ---------   -----------
+  309  309   0001AA F7xx xx             tst   D_CL                      ;wait for CL to display
+  310  310   0001AD 2701                beq   DISPLAYCHECK_3            ;if completed, branch to next check
+  311  311   0001AF 3D                  rts
+  312  312                      DISPLAYCHECK_3:
+  313  313   0001B0 F7xx xx             tst   D_D_ON                    ;wait for D_ON to display
+  314  314   0001B3 2701                beq   exit2                     ;if completed, display is ready
+  315  315   0001B5 3D                  rts        
+  316  316                      exit2:        
+  317  317   0001B6 180B 02xx           movb  #$02, MASTERMIND_STATE	  ;move to hub state
+             0001BA xx         
+  318  318   0001BB 3D                  rts                 
+  319  319                      MASTERMIND_HUB:
+  320  320   0001BC F7xx xx             tst   UPDATEDISPLAY             ;test if display is to be updated
+  321  321   0001BF 2647                bne   UPDATEDISP                ;branch if 1
+  322  322                      HUBANALYZE:        
+  323  323   0001C1 F7xx xx             tst   KEY_FLG			              ;tests if there is a key press
+  324  324   0001C4 2601                bne   ANALYZE			              ;branch if there is a key to analyze
+  325  325   0001C6 3D                  rts				                      ;stay in hub if nothing has been pressed
+  326  326                      
+  327  327                      ANALYZE:
+  328  328   0001C7 F6xx xx             ldab  KEY_BUF                  	;loads the key to be analyzed
+  329  329   0001CA C108                cmpb  #$08		                	;checks if key is a backspace
+  330  330   0001CC 1827 0073           lbeq  MASTERMIND_BSPACE	      	;branch if key is a backspace
+  331  331   0001D0 C10A                cmpb  #$0A                     	;checks if the key is enter
+  332  332   0001D2 1827 00F1           lbeq  MASTERMIND_ENTER	      	;branch if the key is enter
+  333  333   0001D6 C141                cmpb  #$41			                ;corresponds to RUN/STP
+  334  334   0001D8 1827 030D           lbeq	TOGGLEA		                ;branch accordingly
+  335  335   0001DC C142                cmpb  #$42                      ;corresponds to D_ON/D_OFF
+  336  336   0001DE 1827 032C           lbeq  TOGGLEB                   ;branch accordingly
+  337  337   0001E2 C143                cmpb  #$43			                ;corresponds to VREF
+  338  338   0001E4 1827 0345           lbeq  VREF_1		                ;branch accordingly
+  339  339   0001E8 C144                cmpb  #$44		                	;corresponds KP
+  340  340   0001EA 1827 0375           lbeq  KP_1		                	;branch accordingly
+  341  341   0001EE C145                cmpb  #$45			                ;corresponds to KI
+  342  342   0001F0 1827 03B1           lbeq  KI_1                      ;branch accordingly
+  343  343   0001F4 C146                cmpb  #$46                      ;corresponds to CL/OL
+  344  344   0001F6 1827 03F1           lbeq  TOGGLEF		                ;branch accordingly
+  345  345   0001FA C1F2                cmpb  #$F2                      ;corresponds to -
+  346  346   0001FC 1827 0217           lbeq  NEGATIVE_SIGN             ;branch accordingly
+  347  347   000200 1820 0237           lbra  MASTERMIND_DIGIT         	;if none of the above, it is a digit
+  348  348                              
+  349  349   000204 1827 003A           lbeq  EXIT_MAST
+  350  350                      UPDATEDISP:
+  351  351   000208 FCxx xx             ldd   V_REF                     ;loads VREF value
+  352  352   00020B CDxx xx             ldy   #LVREF_BUF                ;loads address of VREF buffer
+  353  353   00020E 16xx xx             jsr   BINARY2ASCII 
+  354  354   000211 FCxx xx             ldd   ERR                       ;load Error value
+  355  355   000214 CDxx xx             ldy   #LERR_BUF                 ;load address of Error buffer
+  356  356   000217 16xx xx             jsr   BINARY2ASCII              ;converts value to ASCII, stores in buffer
+  357  357   00021A FCxx xx             ldd   EFFORT                    ;load Effort value
+  358  358   00021D CDxx xx             ldy   #LEFF_BUF                 ;load address of Effort buffer
+  359  359   000220 16xx xx             jsr   BINARY2ASCII              ;converts value to ASCII, stores in buffer
+  360  360   000223 FCxx xx             ldd   V_ACT                     ;load VACT value
+  361  361   000226 CDxx xx             ldy   #LVACT_BUF                ;load address of VREF buffer
+  362  362   000229 16xx xx             jsr   BINARY2ASCII              ;converts value to ASCII, stores in buffer
+  363  363   00022C 16xx xx             jsr   GETADDR                   ;get current LCD address
+  364  364   00022F 7Axx xx             staa  TEMPADDR                  ;stores the address to be read later
+  365  365   000232 16xx xx             jsr   UPDATELCD_L1              ;update line 1 with all buffers
+  366  366   000235 B6xx xx             ldaa  TEMPADDR                  ;load the stored address
+  367  367   000238 16xx xx             jsr   SETADDR                   ;set the stored address as the current address
+  368  368   00023B 79xx xx             clr   UPDATEDISPLAY             ;clear update display flag
+  369  369   00023E 1820 FF7F           lbra  HUBANALYZE                ;resume M^2 operations
+  370  370                      EXIT_MAST:
+  371  371   000242 3D                  rts  
+
+Freescale HC12-Assembler 
+(c) Copyright Freescale 1987-2010
+
+ Abs. Rel.   Loc    Obj. code   Source line
+ ---- ----   ------ ---------   -----------
+  372  372                      
+  373  373                      ;-------------BACKSPACE----------------------------       
+  374  374                      MASTERMIND_BSPACE:
+  375  375   000243 F7xx xx             tst   VREF_PROMPT               ;checks if backspacing VREF
+  376  376   000246 260C                bne   BSCONTD_VREF              ;branch if backspacing VREF
+  377  377   000248 F7xx xx             tst   KP_PROMPT                 ;checks if backspacing KP
+  378  378   00024B 2627                bne   BSCONTD_KP                ;branch if backspacing KP
+  379  379   00024D F7xx xx             tst   KI_PROMPT                 ;checks if backspacing KI
+  380  380   000250 2642                bne   BSCONTD_KI                ;branch if backspacing KI
+  381  381   000252 276D                beq   BSINVALID                 ;invalid if no prompt is specified
+  382  382                      BSCONTD_VREF:
+  383  383   000254 B6xx xx             ldaa  DIGIT_COUNT              	;checks if digits have been loaded
+  384  384   000257 1827 0059           lbeq  TEST_NEGATIVE             ;test it the negative sign is being deleted
+  385  385   00025B CExx xx             ldx   #V_REF_BUF                ;modifies buffer to remove the offending key
+  386  386   00025E 1808 E420           movb  #$20,a,x                 	;loads a blank instead
+  387  387   000262 180B 01xx           movb  #$01, BACKSPACEDISP      	;sets a backspace for display
+             000266 xx         
+  388  388   000267 73xx xx             dec   DIGIT_COUNT              	;decreases digit count
+  389  389   00026A 1872 xxxx           incw  POINTER                  	;moves pointer back to the appropriate address
+  390  390   00026E 180B 00xx           movb  #$00, KEY_FLG            	;clears KEY_FLG to wait for input
+             000272 xx         
+  391  391   000273 3D                  rts
+  392  392                      BSCONTD_KP:
+  393  393   000274 B6xx xx             ldaa  DIGIT_COUNT              	;checks if digits have been loaded
+  394  394   000277 2748                beq   BSINVALID                	;branch to invalid backspace
+  395  395   000279 CExx xx             ldx   #LKP_BUF                  ;modifies buffer to remove the offending key
+  396  396   00027C 1843                decx                            ;decrements the address
+  397  397   00027E 1808 E420           movb  #$20,a,x                 	;loads a blank instead
+  398  398   000282 180B 01xx           movb  #$01, BACKSPACEDISP      	;sets a backspace for display
+             000286 xx         
+  399  399   000287 73xx xx             dec   DIGIT_COUNT              	;decreases digit count
+  400  400   00028A 1872 xxxx           incw  POINTER                  	;moves pointer back to the appropriate address
+  401  401   00028E 180B 00xx           movb  #$00, KEY_FLG            	;clears KEY_FLG to wait for input
+             000292 xx         
+  402  402   000293 3D                  rts
+  403  403                      BSCONTD_KI:
+  404  404   000294 B6xx xx             ldaa  DIGIT_COUNT              	;checks if digits have been loaded
+  405  405   000297 2728                beq   BSINVALID                	;branch to invalid backspace
+  406  406   000299 CExx xx             ldx   #LKI_BUF                  ;modifies buffer to remove the offending key
+  407  407   00029C 1843                decx                            ;decreases the address
+  408  408   00029E 1808 E420           movb  #$20,a,x                 	;set ascii input
+  409  409   0002A2 180B 01xx           movb  #$01, BACKSPACEDISP      	;sets a backspace for display
+             0002A6 xx         
+  410  410   0002A7 73xx xx             dec   DIGIT_COUNT              	;decreases digit count
+  411  411   0002AA 1872 xxxx           incw  POINTER                  	;moves pointer back to the appropriate address
+  412  412   0002AE 180B 00xx           movb  #$00, KEY_FLG            	;clears KEY_FLG to wait for input
+             0002B2 xx         
+  413  413   0002B3 3D                  rts
+  414  414                      TEST_NEGATIVE:
+  415  415   0002B4 F7xx xx             tst   TAKE2COMP                 ;if negative sign has been pressed, take the 2comp
+  416  416   0002B7 2708                beq   BSINVALID                 ;if no negative sign has been pressed, bspace invalid
+  417  417   0002B9 79xx xx             clr   TAKE2COMP                 ;clear negative flag
+  418  418   0002BC 180B 01xx           movb  #$01, BACKSPACEDISP       ;print a backspace                
+             0002C0 xx         
+  419  419                      BSINVALID:
+  420  420   0002C1 180B 00xx           movb  #$00, KEY_FLG             ;clears KEY_FLG to wait for valid entry
+             0002C5 xx         
+  421  421   0002C6 3D                  rts
+  422  422                              
+  423  423                      
+  424  424                      ;-------------ENTER----------------------------  
+  425  425                      
+  426  426                      
+  427  427                                    
+
+Freescale HC12-Assembler 
+(c) Copyright Freescale 1987-2010
+
+ Abs. Rel.   Loc    Obj. code   Source line
+ ---- ----   ------ ---------   -----------
+  428  428                      MASTERMIND_ENTER:        
+  429  429                      TEST:
+  430  430   0002C7 F7xx xx             tst   DIGIT_COUNT
+  431  431   0002CA 1827 01BD           lbeq  INVALIDENTRY
+  432  432   0002CE F7xx xx             tst   VREF_PROMPT               ;checks if entering VREF
+  433  433   0002D1 260E                bne   VREF_CONV         	      ;branch if entering VREF
+  434  434   0002D3 F7xx xx             tst   KP_PROMPT                 ;checks if entering KP
+  435  435   0002D6 2648                bne   KP_CONV                   ;branch if entering KP
+  436  436   0002D8 F7xx xx             tst   KI_PROMPT                 ;checks if entering KI
+  437  437   0002DB 264F                bne   KI_CONV                   ;branch if entering KI
+  438  438   0002DD 79xx xx             clr   KEY_FLG                  	;clears KEY_FLG to wait for valid entry
+  439  439   0002E0 3D                  rts
+  440  440                      VREF_CONV:        
+  441  441   0002E1 16xx xx             jsr   VREF_CONVERSION           ;converts BUFFER to a time period                                              
+  442  442   0002E4 79xx xx             clr   VREF_PROMPT               ;done entering digits
+  443  443   0002E7 79xx xx             clr   DIGIT_COUNT              	;resets DIGIT_COUNT for next entry
+  444  444   0002EA 79xx xx             clr   KEY_FLG                 	;clears KEY_FLG to wait for next entry
+  445  445   0002ED 79xx xx             clr   TAKE2COMP                 ;clears the negative flag
+  446  446   0002F0 16xx xx             jsr   LCDTEMPLATE               ;resets LCD template
+  447  447   0002F3 16xx xx             jsr   UPDATELCD_L1              ;update L1
+  448  448   0002F6 16xx xx             jsr   UPDATELCD_L2              ;update L2
+  449  449   0002F9 180B 01xx           movb  #$01,D_D_ON               ;display should update
+             0002FD xx         
+  450  450   0002FE F7xx xx             tst   RUN                       ;test RUN
+  451  451   000301 2716                beq   REPRINTD_RUN0             ;if in STP, reprint STP
+  452  452   000303 180B 01xx           movb  #$01,D_RUN                ;if in RUN, reprint RUN
+             000307 xx         
+  453  453   000308 F7xx xx     OLCL:   tst   OL_CL                     ;test OL_CL
+  454  454   00030B 2706                beq   REPRINT_OL                ;if in OL, reprint OL
+  455  455   00030D 180B 01xx           movb  #$01,D_CL                 ;if in CL, reprint CL
+             000311 xx         
+  456  456   000312 3D                  rts        
+  457  457                      REPRINT_OL
+  458  458   000313 180B 01xx           movb  #$01,D_OL                 ;reprint OL        
+             000317 xx         
+  459  459   000318 3D                  rts
+  460  460                      REPRINTD_RUN0:
+  461  461   000319 180B 01xx           movb  #$01,D_STP                ;reprint STP
+             00031D xx         
+  462  462   00031E 20E8                bra   OLCL
+  463  463                      
+  464  464                      KP_CONV:        
+  465  465   000320 16xx xx             jsr   KP_CONVERSION             ;converts BUFFER to a time period                                              	
+  466  466   000323 79xx xx             clr   DIGIT_COUNT              	;resets DIGIT_COUNT for next entry
+  467  467   000326 180B 00xx           movb  #$00, KEY_FLG            	;clears KEY_FLG to wait for next entry
+             00032A xx         
+  468  468   00032B 3D                  rts
+  469  469                      KI_CONV:        
+  470  470   00032C 16xx xx             jsr   KI_CONVERSION             ;converts BUFFER to a time period          
+  471  471                              ;clr   KI_PROMPT
+  472  472   00032F 79xx xx             clr   DIGIT_COUNT              	;resets DIGIT_COUNT for next entry
+  473  473   000332 180B 00xx           movb  #$00, KEY_FLG            	;clears KEY_FLG to wait for next entry
+             000336 xx         
+  474  474   000337 3D                  rts
+  475  475                       ;-------------VREF_CONV---------------------------------------------------------
+  476  476                      
+  477  477                      
+  478  478                      VREF_CONVERSION:
+  479  479                              
+  480  480   000338 37                  pshb                           	;pushes contents of b to the stack
+  481  481   000339 35                  pshy                           	;pushes contents of y to the stack
+  482  482   00033A 1803 xxxx           movw  #V_REF_BUF, POINTER       ;move address of buffer into pointer
+             00033E xxxx       
+  483  483   000340 1872 xxxx           incw  POINTER                   ;increment pointer to first digit
+
+Freescale HC12-Assembler 
+(c) Copyright Freescale 1987-2010
+
+ Abs. Rel.   Loc    Obj. code   Source line
+ ---- ----   ------ ---------   -----------
+  484  484   000344 180C xxxx           movb  DIGIT_COUNT, COUNT        ;sets COUNT to however many digits are loaded
+             000348 xxxx       
+  485  485   00034A 1879 xxxx           clrw  V_REF                  	  ;clears VREF
+  486  486                      
+  487  487                      
+  488  488                      VREF_LOOP:
+  489  489   00034E CC00 0A             ldd   #$0A                     	;loads 10 hex in to accumulator D
+  490  490   000351 FDxx xx             ldy   V_REF                    	;loads VREF into accumulator Y
+  491  491   000354 13                  EMUL                           	;multiplies D and Y and Stores into D and Y
+  492  492   000355 7Cxx xx             std   V_REF                    	;stores contents of D into VREF                              
+  493  493   000358 FDxx xx             ldy   POINTER                  	;loads pointer in y  
+  494  494   00035B A640                ldaa  0,y                      	;loads content of index 0 of y into a
+  495  495   00035D C630                ldab  #$30                     	;loads 30 hex into acuumulator B
+  496  496   00035F 1816                sba                            	;subtracts B from A and stores result in A
+  497  497   000361 180E                tab                            	;moves contents of A into B
+  498  498   000363 87                  clra                           	;all bits in A are cleared
+  499  499                          
+  500  500   000364 F3xx xx             addd  V_REF			                ;adds contents of VREF to D and stores into D
+  501  501   000367 7Cxx xx             std   V_REF                   	;store D in VREF
+  502  502   00036A 1872 xxxx           incw  POINTER                 	;increment POINTER
+  503  503                              
+  504  504   00036E 73xx xx             dec   COUNT                    	;Decrements COUNT
+  505  505   000371 B6xx xx             ldaa  COUNT                    	;If count is 0, conversion is done
+  506  506   000374 97                  tsta                            ;test if count is 0
+  507  507   000375 26D7                bne   VREF_LOOP                	;Branch to loop if count isn't zero
+  508  508   000377 F7xx xx             tst   TAKE2COMP                 ;if negative, take the negative of VREF
+  509  509   00037A 2704                beq   VREF_CONVERT_SET
+  510  510   00037C 1870 xxxx           negw  V_REF                     ;take negative of VREF
+  511  511                                 
+  512  512                              
+  513  513                      VREF_CONVERT_SET:              
+  514  514                      
+  515  515   000380 8600                ldaa  #$00                     	;load accumulator A with 00
+  516  516   000382 31                  puly                           	;pull Y from stack
+  517  517   000383 33                  pulb                           	;pull B from stack
+  518  518                              
+  519  519                      VREF_EXIT:   
+  520  520   000384 79xx xx             clr   VREF_PROMPT               ;clear VREF prompt, wait for new prompt
+  521  521   000387 3D                  rts
+  522  522                       ;-------------KP_CONV---------------------------------------------------------        
+  523  523                      KP_CONVERSION:
+  524  524   000388 37                  pshb                           	;pushes contents of b to the stack
+  525  525   000389 35                  pshy                           	;pushes contents of y to the stack
+  526  526   00038A 1803 xxxx           movw  #LKP_BUF, POINTER       ;move address of buffer into pointer
+             00038E xxxx       
+  527  527   000390 180C xxxx           movb  DIGIT_COUNT, COUNT       	;sets COUNT to however many digits are loaded
+             000394 xxxx       
+  528  528   000396 1879 xxxx           clrw  KP                      	;clears KP
+  529  529                      
+  530  530                      
+  531  531                      KP_LOOP:
+  532  532   00039A CC00 0A             ldd   #$0A                     	;loads 10 hex in to accumulator D
+  533  533   00039D FDxx xx             ldy   KP                   	    ;loads KP into accumulator Y
+  534  534   0003A0 13                  EMUL                           	;multiplies D and Y and Stores into D and Y
+  535  535   0003A1 7Cxx xx             std   KP                   	    ;stores contents of D into KP
+  536  536                      
+  537  537   0003A4 FDxx xx             ldy   POINTER                  	;loads pointer in y  
+  538  538   0003A7 A640                ldaa  0,y                      	;loads content of index 0 of y into a
+  539  539   0003A9 C630                ldab  #$30                     	;loads 30 hex into acuumulator B
+  540  540   0003AB 1816                sba                            	;subtracts B from A and stores result in A
+  541  541   0003AD 180E                tab                            	;moves contents of A into B
+  542  542   0003AF 87                  clra                           	;all bits in A are cleared
+  543  543                          
+  544  544   0003B0 F3xx xx             addd  KP			                  ;adds contents of KP to D and stores into D
+
+Freescale HC12-Assembler 
+(c) Copyright Freescale 1987-2010
+
+ Abs. Rel.   Loc    Obj. code   Source line
+ ---- ----   ------ ---------   -----------
+  545  545   0003B3 7Cxx xx             std   KP                   	    ;store D in KP
+  546  546   0003B6 1872 xxxx           incw  POINTER                  	;increment POINTER
+  547  547                              
+  548  548   0003BA 73xx xx             dec   COUNT                    	;Decrements COUNT
+  549  549   0003BD B6xx xx             ldaa  COUNT                    	;If count is 0, conversion is done
+  550  550   0003C0 97                  tsta                            ;test if count is 0
+  551  551   0003C1 26D7                bne   KP_LOOP                 	;Branch to loop if count isn't zero
+  552  552                                 
+  553  553                              
+  554  554                      KP_CONVERT_SET:              
+  555  555                      
+  556  556   0003C3 8600                ldaa  #$00                     	;load accumulator A with 00
+  557  557   0003C5 31                  puly                           	;pull Y from stack
+  558  558   0003C6 33                  pulb                           	;pull B from stack
+  559  559                              
+  560  560                      KP_EXIT:   
+  561  561   0003C7 79xx xx             clr   KP_PROMPT                 ;clear KP prompt, wait for new prompt
+  562  562   0003CA 3D                  rts                         
+  563  563                       ;-------------KI_CONV---------------------------------------------------------         
+  564  564                      KI_CONVERSION:
+  565  565   0003CB 37                  pshb                           	;pushes contents of b to the stack
+  566  566   0003CC 35                  pshy                           	;pushes contents of y to the stack
+  567  567   0003CD 1803 xxxx           movw  #LKI_BUF, POINTER         ;move address of buffer into pointer
+             0003D1 xxxx       
+  568  568   0003D3 180C xxxx           movb  DIGIT_COUNT, COUNT       	;sets COUNT to however many digits are loaded
+             0003D7 xxxx       
+  569  569   0003D9 1879 xxxx           clrw  KI                   	    ;clears KI
+  570  570                      
+  571  571                      
+  572  572                      KI_LOOP:
+  573  573   0003DD CC00 0A             ldd   #$0A                     	;loads 10 hex in to accumulator D
+  574  574   0003E0 FDxx xx             ldy   KI                   	    ;loads KI into accumulator Y
+  575  575   0003E3 13                  EMUL                           	;multiplies D and Y and Stores into D and Y
+  576  576   0003E4 7Cxx xx             std   KI                   	    ;stores contents of D into KI
+  577  577                      
+  578  578   0003E7 FDxx xx             ldy   POINTER                  	;loads pointer in y  
+  579  579   0003EA A640                ldaa  0,y                      	;loads content of index 0 of y into a
+  580  580   0003EC C630                ldab  #$30                     	;loads 30 hex into acuumulator B
+  581  581   0003EE 1816                sba                            	;subtracts B from A and stores result in A
+  582  582   0003F0 180E                tab                            	;moves contents of A into B
+  583  583   0003F2 87                  clra                           	;all bits in A are cleared
+  584  584                          
+  585  585   0003F3 F3xx xx             addd  KI			                  ;adds contents of KI to D and stores into D
+  586  586   0003F6 7Cxx xx             std   KI                   	    ;store D in KI
+  587  587   0003F9 1872 xxxx           incw  POINTER                  	;increment POINTER
+  588  588                              
+  589  589   0003FD 73xx xx             dec   COUNT                    	;Decrements COUNT
+  590  590   000400 B6xx xx             ldaa  COUNT                    	;If count is 0, conversion is done
+  591  591   000403 97                  tsta
+  592  592   000404 26D7                bne   KI_LOOP                 	;Branch to loop if count isn't zero
+  593  593                                 
+  594  594                              
+  595  595                      KI_CONVERT_SET:              
+  596  596                      
+  597  597   000406 8600                ldaa  #$00                     	;load accumulator A with 00
+  598  598   000408 31                  puly                           	;pull Y from stack
+  599  599   000409 33                  pulb                           	;pull B from stack
+  600  600   00040A F7xx xx             tst   OL_CL                     ;test if OL or CL
+  601  601   00040D 2604                bne   KI_EXIT                   ;if CL, exit
+  602  602   00040F 1879 xxxx           clrw  KI                        ;if OL, clear KI to 0
+  603  603                      KI_EXIT:   
+  604  604   000413 79xx xx             clr   KI_PROMPT                 ;clear KI prompt, wait for new prompt
+  605  605   000416 3D                  rts                      
+  606  606                      ;-------------NEGATIVE SIGN--------------------------------------------------------- 
+
+Freescale HC12-Assembler 
+(c) Copyright Freescale 1987-2010
+
+ Abs. Rel.   Loc    Obj. code   Source line
+ ---- ----   ------ ---------   -----------
+  607  607                      NEGATIVE_SIGN:
+  608  608                                      
+  609  609   000417 B6xx xx             ldaa  VREF_PROMPT               ;tests if VREF is selected
+  610  610   00041A 1827 006D           lbeq  INVALIDENTRY              ;if not, invalid
+  611  611   00041E B6xx xx             ldaa  DIGIT_COUNT               ;loads digit count
+  612  612   000421 2668                bne   INVALIDENTRY              ;if not 0, invalid
+  613  613   000423 862D                ldaa  #$2D                      ;puts a - in a
+  614  614   000425 180B 2Dxx           movb  #$2D, V_REF_BUF           ;puts a - in the first place in buffer
+             000429 xx         
+  615  615   00042A 7Axx xx             staa  KEY_BUF                   ;store negative in KEY_BUF
+  616  616   00042D 180B 01xx           movb  #$01, ECHO                ;echo the negative sign
+             000431 xx         
+  617  617   000432 180B 01xx           movb  #$01, TAKE2COMP           ;tells conversion to take the 2's compliment
+             000436 xx         
+  618  618   000437 79xx xx             clr   KEY_FLG                   ;clear KEY_FLG
+  619  619   00043A 3D                  rts          
+  620  620                      
+  621  621                      ;-------------DIGIT-----------------------------------------------------------------                
+  622  622                      MASTERMIND_DIGIT:
+  623  623                      
+  624  624                              
+  625  625   00043B F7xx xx             tst   VREF_PROMPT               ;checks if VREF digit
+  626  626   00043E 260F                bne   VREF_DIGITS            	  ;branch if VREF digit
+  627  627   000440 F7xx xx             tst   KP_PROMPT                 ;checks if KP digit
+  628  628   000443 264C                bne   KP_DIGITS                 ;branch if KP digit
+  629  629   000445 F7xx xx             tst   KI_PROMPT                 ;checks if KI digit
+  630  630   000448 2673                bne   KI_DIGITS                 ;branch if KI digit
+  631  631   00044A B6xx xx             ldaa  KEY_BUF			              ;loads key to be analyzed
+  632  632   00044D 203C                bra   INVALIDENTRY
+  633  633                      
+  634  634                      ;-------------VREF_DIGITS-----------------------------------------------
+  635  635                      VREF_DIGITS:
+  636  636   00044F B6xx xx             ldaa  DIGIT_COUNT              	;checks DIGIT_COUNT
+  637  637   000452 8003                suba  #$03                      ;subtract 3
+  638  638   000454 97                  tsta                            ;test if 0
+  639  639   000455 2734                beq   INVALIDENTRY             	;if 3 digits have been entered, invalid
+  640  640   000457 F7xx xx             tst   DIGIT_COUNT               ;test if no digits have been entered
+  641  641   00045A 260A                bne   VREF_CONTD1               ;branch to continue
+  642  642   00045C F7xx xx             tst   TAKE2COMP                 ;tests if twos complement is to be taken
+  643  643   00045F 2605                bne   VREF_CONTD1               ;if not, branch to continue
+  644  644   000461 180B 20xx           movb  #$20,V_REF_BUF           ;move blank space into VREF buffer
+             000465 xx         
+  645  645                              
+  646  646                      VREF_CONTD1:
+  647  647   000466 B6xx xx             ldaa  KEY_BUF                  	;loads the digit
+  648  648   000469 8030                suba  #$30                     	;converts ASCII to hex
+  649  649   00046B 810A                cmpa  #$0A                     	;compares to hex 10
+  650  650   00046D 2C1C                bge   INVALIDENTRY             	;if greater than 10, invalid
+  651  651   00046F 2000                bra   VREF_CONTD                ;branch to continue
+  652  652                              
+  653  653                              
+  654  654                      VREF_CONTD:
+  655  655   000471 CExx xx             ldx   #V_REF_BUF                ;loads BUFFER
+  656  656   000474 B6xx xx             ldaa  DIGIT_COUNT               ;loads digit count
+  657  657   000477 42                  inca                          	;increment
+  658  658   000478 1809 E4xx           movb  KEY_BUF,a,x              	;loads digit in proper place in BUFFER
+             00047C xx         
+  659  659   00047D 72xx xx             inc   DIGIT_COUNT              	;increments DIGIT_COUNT
+  660  660   000480 180B 01xx           movb  #$01, ECHO               	;tells display to display the digit
+             000484 xx         
+  661  661   000485 180B 00xx           movb  #$00, KEY_FLG            	;clears KEY_FLG to wait for next digit
+             000489 xx         
+  662  662   00048A 3D                  rts
+  663  663                      INVALIDENTRY:
+
+Freescale HC12-Assembler 
+(c) Copyright Freescale 1987-2010
+
+ Abs. Rel.   Loc    Obj. code   Source line
+ ---- ----   ------ ---------   -----------
+  664  664   00048B 180B 00xx           movb  #$00, KEY_FLG            	;clears KEY_FLG to wait for valid entry
+             00048F xx         
+  665  665   000490 3D                  rts
+  666  666                      ;-------------KP_DIGITS-----------------------------------------------        
+  667  667                      KP_DIGITS:
+  668  668   000491 B6xx xx             ldaa  DIGIT_COUNT              	;checks DIGIT_COUNT
+  669  669   000494 8005                suba  #$05                      ;subtract 5
+  670  670   000496 97                  tsta                            ;test digit count
+  671  671   000497 27F2                beq   INVALIDENTRY             	;if 5 digits have been entered, invalid
+  672  672   000499 B6xx xx             ldaa  KEY_BUF                  	;loads the digit
+  673  673   00049C 8030                suba  #$30                     	;converts ASCII to hex
+  674  674   00049E 810A                cmpa  #$0A                     	;compares to hex 10
+  675  675   0004A0 182C FFE7           lbge  INVALIDENTRY             	;if greater than 10, invalid
+  676  676                      KP_CONTD:
+  677  677   0004A4 CExx xx             ldx   #LKP_BUF                  ;loads BUFFER
+  678  678   0004A7 B6xx xx             ldaa  DIGIT_COUNT              	;loads the current digit count
+  679  679   0004AA 1809 E4xx           movb  KEY_BUF,a,x              	;loads digit in proper place in BUFFER
+             0004AE xx         
+  680  680   0004AF 72xx xx             inc   DIGIT_COUNT              	;increments DIGIT_COUNT
+  681  681   0004B2 180B 01xx           movb  #$01, ECHO               	;tells display to display the digit
+             0004B6 xx         
+  682  682   0004B7 180B 00xx           movb  #$00, KEY_FLG            	;clears KEY_FLG to wait for next digit
+             0004BB xx         
+  683  683   0004BC 3D                  rts
+  684  684                      ;-------------KI_DIGITS-----------------------------------------------        
+  685  685                      KI_DIGITS:
+  686  686   0004BD B6xx xx             ldaa  DIGIT_COUNT              	;checks DIGIT_COUNT
+  687  687   0004C0 8005                suba  #$05                      ;subtract 5
+  688  688   0004C2 97                  tsta                            ;test if 0
+  689  689   0004C3 27C6                beq   INVALIDENTRY             	;if 5 digits have been entered, invalid
+  690  690   0004C5 B6xx xx             ldaa  KEY_BUF                  	;loads the digit
+  691  691   0004C8 8030                suba  #$30                     	;converts ASCII to hex
+  692  692   0004CA 810A                cmpa  #$0A                     	;compares to hex 10
+  693  693   0004CC 182C FFBB           lbge  INVALIDENTRY             	;if greater than 10, invalid
+  694  694                      KI_CONTD:
+  695  695   0004D0 CExx xx             ldx   #LKI_BUF                  ;loads BUFFER
+  696  696   0004D3 B6xx xx             ldaa  DIGIT_COUNT              	;loads the current digit count
+  697  697   0004D6 1809 E4xx           movb  KEY_BUF,a,x              	;loads digit in proper place in BUFFER
+             0004DA xx         
+  698  698   0004DB 72xx xx             inc   DIGIT_COUNT              	;increments DIGIT_COUNT
+  699  699   0004DE 180B 01xx           movb  #$01, ECHO               	;tells display to display the digit
+             0004E2 xx         
+  700  700   0004E3 180B 00xx           movb  #$00, KEY_FLG            	;clears KEY_FLG to wait for next digit
+             0004E7 xx         
+  701  701   0004E8 3D                  rts
+  702  702                      
+  703  703                      ;-------------TOGGLE(A)-----------------------------------------------
+  704  704                      TOGGLEA:
+  705  705   0004E9 F7xx xx             tst   RUN                       ;test RUN
+  706  706   0004EC 270C                beq   TURN_A_ON                 ;if off, turn on
+  707  707   0004EE 79xx xx             clr   RUN                       ;clear RUN
+  708  708   0004F1 180B 01xx           movb  #$01,D_STP                ;display STP
+             0004F5 xx         
+  709  709   0004F6 79xx xx             clr   KEY_FLG                   ;clear KEY_FLG
+  710  710   0004F9 3D                  rts
+  711  711                      TURN_A_ON:
+  712  712   0004FA 79xx xx             clr   KEY_FLG                   ;clear KEY_FLG
+  713  713   0004FD 180B 01xx           movb  #$01,RUN                  ;set RUN
+             000501 xx         
+  714  714   000502 180B 01xx           movb  #$01,D_RUN                ;display RUN
+             000506 xx         
+  715  715   000507 16xx xx             jsr   READ_ENCODER              ;read the encoder
+  716  716   00050A 7Cxx xx             std   ENCODER_COUNT_OLD         ;move into old encoder count
+  717  717   00050D 3D                  rts
+
+Freescale HC12-Assembler 
+(c) Copyright Freescale 1987-2010
+
+ Abs. Rel.   Loc    Obj. code   Source line
+ ---- ----   ------ ---------   -----------
+  718  718                      ;-------------TOGGLE(B)-----------------------------------------------
+  719  719                      TOGGLEB:
+  720  720   00050E F7xx xx             tst   D_ON_D_OFF                ;test D_ON_D_OFF
+  721  721   000511 270C                beq   TURN_B_ON                 ;if off, turn on
+  722  722   000513 79xx xx             clr   D_ON_D_OFF                ;turn off
+  723  723   000516 180B 01xx           movb  #$01,D_D_OFF              ;display D_OFF
+             00051A xx         
+  724  724   00051B 79xx xx             clr   KEY_FLG                   ;clear KEY_FLG
+  725  725   00051E 3D                  rts
+  726  726                      TURN_B_ON:
+  727  727   00051F 180B 01xx           movb  #$01,D_D_ON               ;display D_ON
+             000523 xx         
+  728  728   000524 79xx xx             clr   KEY_FLG                   ;clear KEY_FLG
+  729  729   000527 180B 01xx           movb  #$01,D_ON_D_OFF           ;set D_ON_D_OFF
+             00052B xx         
+  730  730   00052C 3D                  rts
+  731  731                      
+  732  732                      ;-------------PROMPT_VREF(C)----------------------------                
+  733  733                      VREF_1:
+  734  734   00052D F7xx xx             tst   VREF_PROMPT               ;test if VREF has already been pressed
+  735  735   000530 1826 FF57           lbne  INVALIDENTRY              ;invalid if pressed already
+  736  736   000534 F7xx xx             tst   KP_PROMPT                 ;test if KP has already been pressed
+  737  737   000537 1826 FF50           lbne  INVALIDENTRY              ;invalid if pressed already
+  738  738   00053B F7xx xx             tst   KI_PROMPT                 ;test if KI has already been pressed
+  739  739   00053E 1826 FF49           lbne  INVALIDENTRY              ;invalid if pressed already
+  740  740   000542 CExx xx             ldx   #V_REF_BUF                ;loads Buffer into accumulator 
+  741  741   000545 1808 0020           movb  #$20,0,x                 	;set ascii input
+  742  742   000549 1808 0120           movb  #$20,1,x                 	;set ascii input
+  743  743   00054D 1808 0220           movb  #$20,2,x                 	;set ascii input
+  744  744   000551 1808 0320           movb  #$20,3,x                 	;set ascii input  
+  745  745   000555 180B 01xx           movb  #$01, VREF_PROMPT         ;sets VREF prompt
+             000559 xx         
+  746  746   00055A 180B 01xx           movb  #$01, D_VREF              ;tells display to display VREF prompt
+             00055E xx         
+  747  747   00055F 79xx xx             clr   KEY_FLG            	      ;clear KEY_FLG to wait for digit
+  748  748   000562 3D                  rts        
+  749  749                      ;-------------PROMPT_KP(D)----------------------------  
+  750  750                      KP_1:
+  751  751   000563 F7xx xx             tst   VREF_PROMPT               ;test if VREF has already been pressed
+  752  752   000566 1826 FF21           lbne  INVALIDENTRY              ;invalid if pressed already
+  753  753   00056A F7xx xx             tst   KP_PROMPT                 ;test if KP has already been pressed
+  754  754   00056D 1826 FF1A           lbne  INVALIDENTRY              ;invalid if pressed already
+  755  755   000571 F7xx xx             tst   KI_PROMPT                 ;test if KI has already been pressed
+  756  756   000574 1826 FF13           lbne  INVALIDENTRY              ;invalid if pressed already
+  757  757   000578 79xx xx             clr   RUN                       ;turn off motor
+  758  758   00057B 180B 01xx           movb  #$01,D_STP                ;display STP
+             00057F xx         
+  759  759   000580 CExx xx             ldx   #LKP_BUF                  ;loads Buffer into accumulator 
+  760  760   000583 1808 0020           movb  #$20,0,x                 	;set ascii input
+  761  761   000587 1808 0120           movb  #$20,1,x                 	;set ascii input
+  762  762   00058B 1808 0220           movb  #$20,2,x                 	;set ascii input
+  763  763   00058F 1808 0320           movb  #$20,3,x                 	;set ascii input
+  764  764   000593 1808 0420           movb  #$20,4,x                 	;set ascii input
+  765  765   000597 180B 01xx           movb  #$01, KP_PROMPT          	;sets KP_PROMPT
+             00059B xx         
+  766  766   00059C 180B 01xx           movb  #$01, D_KP              	;tells display to display the KP prompt
+             0005A0 xx         
+  767  767                              ;movb  #$01, D_CURSOR        	  ;tells display to put the cursor at NINT=
+  768  768   0005A1 79xx xx             clr    KEY_FLG            	    ;clear KEY_FLG to wait for digit
+  769  769   0005A4 3D                  rts
+  770  770                      ;-------------PROMPT_VREF(E)----------------------------  
+  771  771                      KI_1:
+  772  772   0005A5 F7xx xx             tst   VREF_PROMPT               ;test if VREF has already been pressed
+  773  773   0005A8 1826 FEDF           lbne  INVALIDENTRY              ;invalid if pressed already
+
+Freescale HC12-Assembler 
+(c) Copyright Freescale 1987-2010
+
+ Abs. Rel.   Loc    Obj. code   Source line
+ ---- ----   ------ ---------   -----------
+  774  774   0005AC F7xx xx             tst   KP_PROMPT                 ;test if KP has already been pressed
+  775  775   0005AF 1826 FED8           lbne  INVALIDENTRY              ;invalid if pressed already
+  776  776   0005B3 F7xx xx             tst   KI_PROMPT                 ;test if KI has already been pressed
+  777  777   0005B6 1826 FED1           lbne  INVALIDENTRY              ;invalid if pressed already
+  778  778   0005BA 79xx xx             clr   RUN                       ;turn off motor
+  779  779   0005BD 180B 01xx           movb  #$01,D_STP                ;display STP
+             0005C1 xx         
+  780  780   0005C2 CExx xx             ldx   #LKI_BUF                 ;loads Buffer into accumulator 
+  781  781   0005C5 1808 0020           movb  #$20,0,x                 	;set ascii input
+  782  782   0005C9 1808 0120           movb  #$20,1,x                 	;set ascii input
+  783  783   0005CD 1808 0220           movb  #$20,2,x                 	;set ascii input
+  784  784   0005D1 1808 0320           movb  #$20,3,x                 	;set ascii input
+  785  785   0005D5 1808 0420           movb  #$20,4,x                 	;set ascii input
+  786  786   0005D9 180B 01xx           movb  #$01, KI_PROMPT           ;sets KI prompt
+             0005DD xx         
+  787  787   0005DE 180B 01xx           movb  #$01, D_KI              	;tells display to display the KI prompt
+             0005E2 xx         
+  788  788   0005E3 79xx xx             clr   KEY_FLG            	      ;clear KEY_FLG to wait for digit
+  789  789   0005E6 3D                  rts
+  790  790                      exitf:
+  791  791   0005E7 79xx xx             clr   KEY_FLG                  	;clears KEY_FLG to wait for a valid entry
+  792  792   0005EA 3D                  rts
+  793  793                              
+  794  794                      ;-------------TOGGLE(F)-----------------------------------------------
+  795  795                      TOGGLEF:
+  796  796   0005EB F7xx xx             tst   OL_CL                     ;test OL_CL
+  797  797   0005EE 2710                beq   TURN_F_ON                 ;if off, turn on
+  798  798   0005F0 79xx xx             clr   OL_CL                     ;turn off
+  799  799   0005F3 1879 xxxx           clrw  KI                        ;clear KI to 0
+  800  800   0005F7 180B 01xx           movb  #$01,D_OL                 ;display OL
+             0005FB xx         
+  801  801   0005FC 79xx xx             clr   KEY_FLG                   ;clear KEY_FLG
+  802  802   0005FF 3D                  rts
+  803  803                      TURN_F_ON:                   
+  804  804   000600 79xx xx             clr   KEY_FLG                   ;clear KEY_FLG
+  805  805   000603 180B 01xx           movb  #$01,OL_CL                ;turn on
+             000607 xx         
+  806  806   000608 180B 01xx           movb  #$01,D_CL                 ;display CL
+             00060C xx         
+  807  807   00060D 3D                  rts       
+  808  808                      ;-----------------------------------------------------------------------------------       
+  809  809                      ;-------------KEYPAD---------------------------------------------------------
+  810  810                      
+  811  811                      KEYPAD:
+  812  812   00060E B6xx xx             ldaa  KEYPAD_STATE	          	;execute states in order
+  813  813   000611 2707                beq   KEYPAD_STATE_0
+  814  814   000613 43                  deca  
+  815  815   000614 2710                beq   KEYPAD_STATE_1
+  816  816   000616 43                  deca  
+  817  817   000617 2723                beq   KEYPAD_STATE_2
+  818  818   000619 3D                  rts
+  819  819                              
+  820  820                              
+  821  821                      KEYPAD_STATE_0:  
+  822  822   00061A 16xx xx             jsr   INITKEY		               	;initialize the keypad
+  823  823   00061D 16xx xx             jsr   CURSOR_ON		            	;initialize the cursor
+  824  824   000620 180B 01xx           movb  #$01, KEYPAD_STATE       	;move into state 1
+             000624 xx         
+  825  825   000625 3D                  rts                         
+  826  826                      
+  827  827                      KEYPAD_STATE_1:
+  828  828   000626 F7xx xx             tst   LKEY_FLG		            	;tests if a key has been pressed
+  829  829   000629 271D                beq   exit		                	;if not, return
+  830  830   00062B 16xx xx             jsr   GETCHAR		              	;gets character if a key has been pressed
+
+Freescale HC12-Assembler 
+(c) Copyright Freescale 1987-2010
+
+ Abs. Rel.   Loc    Obj. code   Source line
+ ---- ----   ------ ---------   -----------
+  831  831   00062E 7Bxx xx             stab  KEY_BUF		              	;stores the key in key_buf to be read by M^2
+  832  832   000631 180B 01xx           movb  #$01, KEY_FLG	           	;raises flag so M^2 knows there is a key availible
+             000635 xx         
+  833  833   000636 180B 02xx           movb  #$02, KEYPAD_STATE      	;move to state 2
+             00063A xx         
+  834  834   00063B 3D                  rts
+  835  835                      
+  836  836                      KEYPAD_STATE_2:
+  837  837                              
+  838  838   00063C F7xx xx             tst   KEY_FLG		              	;wait for acknowledgement
+  839  839   00063F 2701                beq   set1		                	;move to state 1 if acknowledged
+  840  840   000641 3D                  rts   
+  841  841                      set1:
+  842  842   000642 180B 01xx           movb  #01, KEYPAD_STATE		      ;move to state 1
+             000646 xx         
+  843  843   000647 3D                  rts
+  844  844                      exit:
+  845  845   000648 3D                  rts
+  846  846                      
+  847  847                      ;-------------DISPLAY--------------------------------------------------------
+  848  848                      
+  849  849                      DISPLAY:
+  850  850   000649 B6xx xx           ldaa    dispstate                 ;move through Display tasks in order
+  851  851   00064C 1827 0048         lbeq    INIT
+  852  852   000650 43                deca
+  853  853   000651 1827 0049         lbeq    dispstate1
+  854  854   000655 43                deca
+  855  855   000656 1827 00A7         lbeq    dispstate2
+  856  856   00065A 43                deca
+  857  857   00065B 1827 00BF         lbeq    dispstate3
+  858  858   00065F 43                deca
+  859  859   000660 1827 00CC         lbeq    dispstate4
+  860  860   000664 43                deca
+  861  861   000665 1827 00EC         lbeq    dispstate4a
+  862  862   000669 43                deca   
+  863  863   00066A 1827 011D         lbeq    dispstate5a
+  864  864   00066E 43                deca
+  865  865   00066F 1827 0129         lbeq    dispstate6
+  866  866   000673 43                deca    
+  867  867   000674 1827 0149         lbeq    dispstate6a
+  868  868   000678 43                deca    
+  869  869   000679 1827 0155         lbeq    dispstate7
+  870  870   00067D 43                deca
+  871  871   00067E 1827 0170         lbeq    dispstate8
+  872  872   000682 43                deca
+  873  873   000683 1827 01A3         lbeq    dispstate9
+  874  874   000687 43                deca
+  875  875   000688 1827 01BE         lbeq    dispstate10
+  876  876   00068C 43                deca
+  877  877   00068D 1827 01D9         lbeq    dispstate11
+  878  878   000691 43                deca
+  879  879   000692 1827 01F4         lbeq    dispstate12
+  880  880   000696 43                deca      
+  881  881                            
+  882  882   000697 3D                rts
+  883  883                      INIT:
+  884  884   000698 180B 01xx         movb    #$01, dispstate           ;move into display hub
+             00069C xx         
+  885  885   00069D 3D                rts
+  886  886                      
+  887  887                      ;-------------HUB----------------------------------------------------- 
+  888  888                      dispstate1:
+  889  889   00069E F7xx xx           tst     BACKSPACEDISP			        ;tests for backspace    
+  890  890   0006A1 1826 005C         lbne    dispstate2                ;branches if set
+
+Freescale HC12-Assembler 
+(c) Copyright Freescale 1987-2010
+
+ Abs. Rel.   Loc    Obj. code   Source line
+ ---- ----   ------ ---------   -----------
+  891  891   0006A5 F7xx xx           tst     ECHO                      ;tests if a digit is to be echoed
+  892  892   0006A8 1826 0072         lbne    dispstate3                ;branches if set
+  893  893   0006AC F7xx xx           tst     D_VREF                    ;tests for VREF prompt
+  894  894   0006AF 1826 007D         lbne    dispstate4                ;branches if set
+  895  895   0006B3 F7xx xx           tst     VREF_CURSOR               ;tests for VREF cursor
+  896  896   0006B6 1826 009B         lbne    dispstate4a               ;branches if set
+  897  897   0006BA F7xx xx           tst     D_KP                      ;tests for KP prompt
+  898  898   0006BD 1826 00A5         lbne    dispstate5                ;branches if set
+  899  899   0006C1 F7xx xx           tst     KP_CURSOR                 ;tests for KP cursor
+  900  900   0006C4 1826 00C3         lbne    dispstate5a               ;branches if set
+  901  901   0006C8 F7xx xx           tst     D_KI                      ;tests for KI prompt
+  902  902   0006CB 1826 00CD         lbne    dispstate6                ;branches if set
+  903  903   0006CF F7xx xx           tst     KI_CURSOR                 ;tests for KP cursor
+  904  904   0006D2 1826 00EB         lbne    dispstate6a               ;branches if set
+  905  905   0006D6 F7xx xx           tst     D_RUN                     ;tests for RUN
+  906  906   0006D9 1826 00F5         lbne    dispstate7                ;branches accordingly
+  907  907   0006DD F7xx xx           tst     D_STP                     ;tests for STOP
+  908  908   0006E0 1826 010E         lbne    dispstate8                ;branches accordingly
+  909  909   0006E4 F7xx xx           tst     D_CL                      ;tests for CL
+  910  910   0006E7 1826 013F         lbne    dispstate9                ;branches accordingly
+  911  911   0006EB F7xx xx           tst     D_OL                      ;tests for OL
+  912  912   0006EE 1826 0158         lbne    dispstate10               ;branches accordinly
+  913  913   0006F2 F7xx xx           tst     D_D_ON                    ;tests for D_ON
+  914  914   0006F5 1826 0171         lbne    dispstate11               ;branches accordingly
+  915  915   0006F9 F7xx xx           tst     D_D_OFF                   ;tests for D_OFF
+  916  916   0006FC 1826 018A         lbne    dispstate12               ;branches accordingly
+  917  917   000700 3D                rts
+  918  918                      ;-------------BACKSPACE-----------------------------------------------
+  919  919                      dispstate2:
+  920  920   000701 16xx xx           jsr     GETADDR                  	;Loads the current LCD address
+  921  921   000704 43                deca                              ;decrements LCD address
+  922  922   000705 16xx xx           jsr     SETADDR                   ;Moves the address back one space
+  923  923   000708 7Axx xx           staa    DPTR                      ;Stores the location to be the next digit address
+  924  924                            ;jsr     putchar_1			
+  925  925   00070B C620              ldab    #' '                      ;Loads a blank space to clear the digit
+  926  926   00070D 16xx xx           jsr     OUTCHAR                   ;Prints the blank space
+  927  927   000710 16xx xx           jsr     GETADDR                   ;Repeat the process of moving the address back
+  928  928   000713 43                deca
+  929  929   000714 16xx xx           jsr     SETADDR                   ;Sets the new address for the next digit
+  930  930   000717 16xx xx           jsr     CURSOR_ON                 ;Sets the cursor at the address
+  931  931   00071A 79xx xx           clr     BACKSPACEDISP             ;Clear message flag
+  932  932   00071D 3D                rts
+  933  933                      ;-------------ECHO-----------------------------------------------
+  934  934                      dispstate3:
+  935  935   00071E 16xx xx           jsr     GETADDR			              ;Loads the current LCD address
+  936  936   000721 F6xx xx           ldab    KEY_BUF                   ;Loads the digit to be displayed
+  937  937   000724 16xx xx           jsr     OUTCHAR                	  ;Displays the digit at the correct address
+  938  938   000727 180B 01xx         movb    #$01, dispstate           ;Return to hub
+             00072B xx         
+  939  939   00072C 79xx xx           clr     ECHO                      ;Clear message flag
+  940  940   00072F 3D                rts
+  941  941                      ;-------------Vref PROMPT-----------------------------------------------
+  942  942                      dispstate4:
+  943  943   000730 F7xx xx           tst     FIRSTCHAR                 ;Tests if the message is at the beginning
+  944  944   000733 270A              beq     regular4                	;If not, no need to set an address
+  945  945   000735 8640              ldaa    #$40                      ;Sets address for fixed message
+  946  946   000737 CExx xx           ldx     #VREF_MESS               	;Loads VREF message
+  947  947   00073A 16xx xx           jsr     putchar_1                 ;Outputs first character of message
+  948  948   00073D 2003              bra     bottom4                   ;Goes to bottom half of the function
+  949  949                      regular4:
+  950  950   00073F 16xx xx           jsr     putchar                   ;Outputs a character from a message
+  951  951                      bottom4:
+  952  952   000742 F7xx xx           tst     FIRSTCHAR                 ;Tests first character
+  953  953   000745 270D              beq     exit4                     ;If 0, then message is not finished
+
+Freescale HC12-Assembler 
+(c) Copyright Freescale 1987-2010
+
+ Abs. Rel.   Loc    Obj. code   Source line
+ ---- ----   ------ ---------   -----------
+  954  954   000747 180B 01xx         movb    #$01, dispstate           ;Return to hub
+             00074B xx         
+  955  955   00074C 79xx xx           clr     D_VREF                   	;Clear message flag
+  956  956   00074F 180B 01xx         movb    #$01, VREF_CURSOR		      ;displays cursor at VREF prompt
+             000753 xx         
+  957  957                      exit4:
+  958  958   000754 3D                rts
+  959  959                      ;-------------Vref CURSOR-----------------------------------------------
+  960  960                      dispstate4a:
+  961  961   000755 8649              ldaa    #$49			                ;Loads LCD address to be set by SETADDR
+  962  962   000757 16xx xx           jsr     SETADDR                   ;Sets address of the digits 
+  963  963   00075A 16xx xx           jsr     CURSOR_ON                 ;Turns on cursor at the address
+  964  964   00075D 180B 01xx         movb    #01, dispstate            ;Return to hub
+             000761 xx         
+  965  965   000762 79xx xx           clr     VREF_CURSOR               ;Clear message flag
+  966  966   000765 3D                rts
+  967  967                      
+  968  968                      ;-------------KP PROMPT-----------------------------------------------
+  969  969                      dispstate5:
+  970  970   000766 F7xx xx           tst     FIRSTCHAR                 ;Tests if the message is at the beginning
+  971  971   000769 270A              beq     regular5                	;If not, no need to set an address
+  972  972   00076B 8648              ldaa    #$48                      ;Sets address for fixed message
+  973  973   00076D CExx xx           ldx     #FIVEBLANKS               ;clears current value
+  974  974   000770 16xx xx           jsr     putchar_1                 ;Outputs first character of message
+  975  975   000773 2003              bra     bottom5                   ;Goes to bottom half of the function
+  976  976                      regular5:
+  977  977   000775 16xx xx           jsr     putchar                   ;Outputs a character from a message
+  978  978                      bottom5:
+  979  979   000778 F7xx xx           tst     FIRSTCHAR                 ;Tests first character
+  980  980   00077B 270D              beq     exit5                     ;If 0, then message is not finished
+  981  981   00077D 180B 01xx         movb    #$01, dispstate           ;Return to hub
+             000781 xx         
+  982  982   000782 79xx xx           clr     D_KP                    	;Clear message flag
+  983  983   000785 180B 01xx         movb    #$01, KP_CURSOR		        ;displays cursor at KP
+             000789 xx         
+  984  984                      exit5:
+  985  985   00078A 3D                rts
+  986  986                      ;-------------KP CURSOR-----------------------------------------------
+  987  987                      dispstate5a:
+  988  988   00078B 8648              ldaa    #$48			                ;Loads LCD address to be set by SETADDR
+  989  989   00078D 16xx xx           jsr     SETADDR                   ;Sets address of the digits 
+  990  990   000790 16xx xx           jsr     CURSOR_ON                 ;Turns on cursor at the address
+  991  991   000793 180B 01xx         movb    #01, dispstate            ;Return to hub
+             000797 xx         
+  992  992   000798 79xx xx           clr     KP_CURSOR                 ;Clear message flag
+  993  993   00079B 3D                rts
+  994  994                       ;-------------KI PROMPT-----------------------------------------------
+  995  995                      dispstate6:
+  996  996   00079C F7xx xx           tst     FIRSTCHAR                 ;Tests if the message is at the beginning
+  997  997   00079F 270A              beq     regular6                	;If not, no need to set an address
+  998  998   0007A1 8656              ldaa    #$56                      ;Sets address for fixed message
+  999  999   0007A3 CExx xx           ldx     #FIVEBLANKS               ;clears current value
+ 1000 1000   0007A6 16xx xx           jsr     putchar_1                 ;Outputs first character of message
+ 1001 1001   0007A9 2003              bra     bottom6                   ;Goes to bottom half of the function
+ 1002 1002                      regular6:
+ 1003 1003   0007AB 16xx xx           jsr     putchar                   ;Outputs a character from a message
+ 1004 1004                      bottom6:
+ 1005 1005   0007AE F7xx xx           tst     FIRSTCHAR                 ;Tests first character
+ 1006 1006   0007B1 270D              beq     exit6                     ;If 0, then message is not finished
+ 1007 1007   0007B3 180B 01xx         movb    #$01, dispstate           ;Return to hub
+             0007B7 xx         
+ 1008 1008   0007B8 79xx xx           clr     D_KI                    	;Clear message flag
+ 1009 1009   0007BB 180B 01xx         movb    #$01, KI_CURSOR		        ;displays cursor at KI
+             0007BF xx         
+
+Freescale HC12-Assembler 
+(c) Copyright Freescale 1987-2010
+
+ Abs. Rel.   Loc    Obj. code   Source line
+ ---- ----   ------ ---------   -----------
+ 1010 1010                      exit6:
+ 1011 1011   0007C0 3D                rts
+ 1012 1012                      ;-------------KI CURSOR-----------------------------------------------
+ 1013 1013                      dispstate6a:
+ 1014 1014   0007C1 8656              ldaa    #$56			                ;Loads LCD address to be set by SETADDR
+ 1015 1015   0007C3 16xx xx           jsr     SETADDR                   ;Sets address of the digits 
+ 1016 1016   0007C6 16xx xx           jsr     CURSOR_ON                 ;Turns on cursor at the address
+ 1017 1017   0007C9 180B 01xx         movb    #01, dispstate            ;Return to hub
+             0007CD xx         
+ 1018 1018   0007CE 79xx xx           clr     KI_CURSOR                 ;Clear message flag
+ 1019 1019   0007D1 3D                rts
+ 1020 1020                      ;-------------RUN-----------------------------------------------
+ 1021 1021                      dispstate7:
+ 1022 1022   0007D2 F7xx xx           tst     FIRSTCHAR                 ;Tests if the message is at the beginning
+ 1023 1023   0007D5 270A              beq     regular7                	;If not, no need to set an address
+ 1024 1024   0007D7 865C              ldaa    #$5C                      ;Sets address for fixed message
+ 1025 1025   0007D9 CExx xx           ldx     #RUN_MESS               	;Loads RUN message
+ 1026 1026   0007DC 16xx xx           jsr     putchar_1                 ;Outputs first character of message
+ 1027 1027   0007DF 2003              bra     bottom7                   ;Goes to bottom half of the function
+ 1028 1028                      regular7:
+ 1029 1029   0007E1 16xx xx           jsr     putchar                   ;Outputs a character from a message
+ 1030 1030                      bottom7:
+ 1031 1031   0007E4 F7xx xx           tst     FIRSTCHAR                 ;Tests first character
+ 1032 1032   0007E7 2708              beq     exit7                     ;If 0, then message is not finished
+ 1033 1033   0007E9 180B 01xx         movb    #$01, dispstate           ;Return to hub
+             0007ED xx         
+ 1034 1034   0007EE 79xx xx           clr     D_RUN                   	;Clear message flag
+ 1035 1035                      exit7:
+ 1036 1036   0007F1 3D                rts
+ 1037 1037                      ;-------------STP-----------------------------------------------
+ 1038 1038                      dispstate8:
+ 1039 1039   0007F2 F7xx xx           tst     FIRSTCHAR                 ;Tests if the message is at the beginning
+ 1040 1040   0007F5 270A              beq     regular8                	;If not, no need to set an address
+ 1041 1041   0007F7 865C              ldaa    #$5C                      ;Sets address for fixed message
+ 1042 1042   0007F9 CExx xx           ldx     #STP_MESS               	;Loads STP message
+ 1043 1043   0007FC 16xx xx           jsr     putchar_1                 ;Outputs first character of message
+ 1044 1044   0007FF 2003              bra     bottom8                   ;Goes to bottom half of the function
+ 1045 1045                      regular8:
+ 1046 1046   000801 16xx xx           jsr     putchar                   ;Outputs a character from a message
+ 1047 1047                      bottom8:
+ 1048 1048   000804 F7xx xx           tst     FIRSTCHAR                 ;Tests first character
+ 1049 1049   000807 2712              beq     exit8                     ;If 0, then message is not finished
+ 1050 1050   000809 180B 01xx         movb    #$01, dispstate           ;Return to hub
+             00080D xx         
+ 1051 1051   00080E F7xx xx           tst     KI_PROMPT                 ;test if being reprinted because of a new KI or KP
+ 1052 1052   000811 2609              bne     RESET_KI_ADDRESS          ;reset address at KI
+ 1053 1053   000813 F7xx xx           tst     KP_PROMPT                 
+ 1054 1054   000816 260B              bne     RESET_KP_ADDRESS          ;reset address at KP
+ 1055 1055                      clear8:
+ 1056 1056   000818 79xx xx           clr     D_STP                   	;Clear message flag
+ 1057 1057                      exit8:
+ 1058 1058   00081B 3D                rts
+ 1059 1059                      RESET_KI_ADDRESS:
+ 1060 1060   00081C 180B 01xx         movb    #$01,KI_CURSOR            ;reset LCD at KI
+             000820 xx         
+ 1061 1061   000821 20F5              bra     clear8
+ 1062 1062                      RESET_KP_ADDRESS:
+ 1063 1063   000823 180B 01xx         movb    #$01,KP_CURSOR            ;reset LCD at KP
+             000827 xx         
+ 1064 1064   000828 20EE              bra     clear8
+ 1065 1065                      ;-------------CL-----------------------------------------------
+ 1066 1066                      dispstate9:
+ 1067 1067   00082A F7xx xx           tst     FIRSTCHAR                 ;Tests if the message is at the beginning
+ 1068 1068   00082D 270A              beq     regular9                	;If not, no need to set an address
+
+Freescale HC12-Assembler 
+(c) Copyright Freescale 1987-2010
+
+ Abs. Rel.   Loc    Obj. code   Source line
+ ---- ----   ------ ---------   -----------
+ 1069 1069   00082F 8660              ldaa    #$60                      ;Sets address for fixed message
+ 1070 1070   000831 CExx xx           ldx     #CL_MESS                	;Loads CL message
+ 1071 1071   000834 16xx xx           jsr     putchar_1                 ;Outputs first character of message
+ 1072 1072   000837 2003              bra     bottom9                   ;Goes to bottom half of the function
+ 1073 1073                      regular9:
+ 1074 1074   000839 16xx xx           jsr     putchar                   ;Outputs a character from a message
+ 1075 1075                      bottom9:
+ 1076 1076   00083C F7xx xx           tst     FIRSTCHAR                 ;Tests first character
+ 1077 1077   00083F 2708              beq     exit9                     ;If 0, then message is not finished
+ 1078 1078   000841 180B 01xx         movb    #$01, dispstate           ;Return to hub
+             000845 xx         
+ 1079 1079   000846 79xx xx           clr     D_CL                    	;Clear message flag
+ 1080 1080                      exit9:
+ 1081 1081   000849 3D                rts
+ 1082 1082                      ;-------------OL-----------------------------------------------
+ 1083 1083                      dispstate10:
+ 1084 1084   00084A F7xx xx           tst     FIRSTCHAR                 ;Tests if the message is at the beginning
+ 1085 1085   00084D 270A              beq     regular10                	;If not, no need to set an address
+ 1086 1086   00084F 8660              ldaa    #$60                      ;Sets address for fixed message
+ 1087 1087   000851 CExx xx           ldx     #OL_MESS               	  ;Loads OL message
+ 1088 1088   000854 16xx xx           jsr     putchar_1                 ;Outputs first character of message
+ 1089 1089   000857 2003              bra     bottom10                  ;Goes to bottom half of the function
+ 1090 1090                      regular10:
+ 1091 1091   000859 16xx xx           jsr     putchar                   ;Outputs a character from a message
+ 1092 1092                      bottom10:
+ 1093 1093   00085C F7xx xx           tst     FIRSTCHAR                 ;Tests first character
+ 1094 1094   00085F 2708              beq     exit10                    ;If 0, then message is not finished
+ 1095 1095   000861 180B 01xx         movb    #$01, dispstate           ;Return to hub
+             000865 xx         
+ 1096 1096   000866 79xx xx           clr    D_OL                   	  ;Clear message flag
+ 1097 1097                      exit10:
+ 1098 1098   000869 3D                rts
+ 1099 1099                      ;-------------D_ON-----------------------------------------------
+ 1100 1100                      dispstate11:
+ 1101 1101   00086A F7xx xx           tst     FIRSTCHAR                 ;Tests if the message is at the beginning
+ 1102 1102   00086D 270A              beq     regular11                	;If not, no need to set an address
+ 1103 1103   00086F 8663              ldaa    #$63                      ;Sets address for fixed message
+ 1104 1104   000871 CExx xx           ldx     #D_ON_MESS               	;Loads D_ON message
+ 1105 1105   000874 16xx xx           jsr     putchar_1                 ;Outputs first character of message
+ 1106 1106   000877 2003              bra     bottom11                  ;Goes to bottom half of the function
+ 1107 1107                      regular11:
+ 1108 1108   000879 16xx xx           jsr     putchar                   ;Outputs a character from a message
+ 1109 1109                      bottom11:
+ 1110 1110   00087C F7xx xx           tst     FIRSTCHAR                 ;Tests first character
+ 1111 1111   00087F 2708              beq     exit11                    ;If 0, then message is not finished
+ 1112 1112   000881 180B 01xx         movb    #$01, dispstate           ;Return to hub
+             000885 xx         
+ 1113 1113   000886 79xx xx           clr     D_D_ON                   	;Clear message flag
+ 1114 1114                      exit11:
+ 1115 1115   000889 3D                rts
+ 1116 1116                      ;-------------D_OFF-----------------------------------------------
+ 1117 1117                      dispstate12:
+ 1118 1118   00088A F7xx xx           tst     FIRSTCHAR                 ;Tests if the message is at the beginning
+ 1119 1119   00088D 270A              beq     regular12                	;If not, no need to set an address
+ 1120 1120   00088F 8663              ldaa    #$63                      ;Sets address for fixed message
+ 1121 1121   000891 CExx xx           ldx     #D_OFF_MESS               ;Loads D_OFF message
+ 1122 1122   000894 16xx xx           jsr     putchar_1                 ;Outputs first character of message
+ 1123 1123   000897 2003              bra     bottom12                  ;Goes to bottom half of the function
+ 1124 1124                      regular12:
+ 1125 1125   000899 16xx xx           jsr     putchar                   ;Outputs a character from a message
+ 1126 1126                      bottom12:
+ 1127 1127   00089C F7xx xx           tst     FIRSTCHAR                 ;Tests first character
+ 1128 1128   00089F 2708              beq     exit12                    ;If 0, then message is not finished
+ 1129 1129   0008A1 180B 01xx         movb    #$01, dispstate           ;Return to hub
+
+Freescale HC12-Assembler 
+(c) Copyright Freescale 1987-2010
+
+ Abs. Rel.   Loc    Obj. code   Source line
+ ---- ----   ------ ---------   -----------
+             0008A5 xx         
+ 1130 1130   0008A6 79xx xx           clr     D_D_OFF                   ;Clear message flag
+ 1131 1131                      exit12:
+ 1132 1132   0008A9 3D                rts            
+ 1133 1133                                              
+ 1134 1134                                        
+ 1135 1135                            
+ 1136 1136                      
+ 1137 1137                      ;/------------------------------------------------------------------------------------\
+ 1138 1138                      ;| Subroutines                                                                        |
+ 1139 1139                      ;\------------------------------------------------------------------------------------/
+ 1140 1140                      ; General purpose subroutines go here
+ 1141 1141                      
+ 1142 1142                      putchar:
+ 1143 1143   0008AA FExx xx           ldx      DPTR                     ;Loads current display address
+ 1144 1144   0008AD E600              ldab     0,X                 	    ;Loads character unless there is none
+ 1145 1145   0008AF 2709              beq      exit1                    ;Branch to exit if message is complete
+ 1146 1146   0008B1 16xx xx           jsr      OUTCHAR                  ;Put character on LCD display
+ 1147 1147   0008B4 1842              incx                              ;Increment X
+ 1148 1148   0008B6 7Exx xx           stx      DPTR			                ;Stores next address in DPTR
+ 1149 1149   0008B9 3D                rts 
+ 1150 1150                      exit1:
+ 1151 1151   0008BA 180B 01xx     movb #$01, FIRSTCHAR                  ;Sets FIRSTCHAR so message is done printing
+             0008BE xx         
+ 1152 1152   0008BF 3D            rts
+ 1153 1153                      putchar_1:
+ 1154 1154   0008C0 7Exx xx       stx DPTR                              ;Stores DPTR in x
+ 1155 1155   0008C3 16xx xx       jsr SETADDR                           ;Sets the new display address from x
+ 1156 1156   0008C6 79xx xx       clr FIRSTCHAR                         ;First character has been printed
+ 1157 1157   0008C9 3D            rts
+ 1158 1158                      
+ 1159 1159                      
+ 1160 1160                      BINARY2ASCII:
+ 1161 1161   0008CA 1808 4020            movb    #$20,0,Y               ;move blanks to buffer
+ 1162 1162   0008CE 1808 4120            movb    #$20,1,Y                
+ 1163 1163   0008D2 1808 4220            movb    #$20,2,Y                
+ 1164 1164   0008D6 1808 4320            movb    #$20,3,Y                
+ 1165 1165                               
+ 1166 1166   0008DA 180B 01xx            movb #01,COUNT
+             0008DE xx         
+ 1167 1167   0008DF 7Cxx xx              std  TEMP1                     ;stores into TEMP1
+ 1168 1168   0008E2 2D2C                 blt  subloadneg                ;branch if negative
+ 1169 1169   0008E4 1808 4020            movb #$20,0,Y                  ;if positive, move a blank space into the first buffer space
+ 1170 1170   0008E8 1852                 incy                           ;moves to the first digit place in buffer
+ 1171 1171                                   
+ 1172 1172                      subloop:         
+ 1173 1173   0008EA FCxx xx              ldd  TEMP1                     ;loads number or quotient
+ 1174 1174   0008ED CE00 0A              ldx  #$0A                      ;loads 10 into X
+ 1175 1175   0008F0 1810                 IDIV                           ;divide the number by 10
+ 1176 1176   0008F2 C300 30              addd #$30                      ;add 30 to remainder, converts to ASCII
+ 1177 1177   0008F5 37                   pshb                           ;push the digit onto the stack            
+ 1178 1178   0008F6 1897                 tstx                           ;tests the quotient
+ 1179 1179   0008F8 2708                 beq  subfill                   ;if 0, conversion is done
+ 1180 1180   0008FA 7Exx xx              stx  TEMP1                     ;stores quotient into TEMP1
+ 1181 1181   0008FD 72xx xx              inc  COUNT                     ;increment count
+ 1182 1182   000900 20E8                 bra  subloop                   ;branch to continue subroutine
+ 1183 1183                      
+ 1184 1184                      subfill:    
+ 1185 1185   000902 33                   pulb                           ;pull digit from stack
+ 1186 1186   000903 6B40                 stab 0,Y                       ;store in buffer location defined by Y
+ 1187 1187   000905 1852                 incy                           ;advance to next location
+ 1188 1188   000907 73xx xx              dec  COUNT                     ;decrease count
+ 1189 1189   00090A F7xx xx              tst  COUNT                     ;if COUNT is 0, all digits have been loaded
+ 1190 1190   00090D 26F3                 bne  subfill                   ;continues buffer filling loop
+
+Freescale HC12-Assembler 
+(c) Copyright Freescale 1987-2010
+
+ Abs. Rel.   Loc    Obj. code   Source line
+ ---- ----   ------ ---------   -----------
+ 1191 1191   00090F 3D                   rts                            ;return        
+ 1192 1192                                
+ 1193 1193                      subloadneg:
+ 1194 1194   000910 1808 402D            movb #$2D,0,Y                  ;moves negative sign into first buffer address
+ 1195 1195   000914 1870 xxxx            negw TEMP1                     ;take two's comp of the number
+ 1196 1196   000918 1852                 incy                           ;increment address
+ 1197 1197   00091A 20CE                 bra  subloop                   ;branch back to the conversion
+ 1198 1198                      
+ 1199 1199                      interrupt:                            	;interrupt subroutine
+ 1200 1200   00091C F7xx xx             tst     D_ON_D_OFF              ;tests if display should be updating
+ 1201 1201   00091F 2712                beq     NOUPDATE                ;do not update display count
+ 1202 1202   000921 73xx xx             dec     UPDATECOUNT             ;decrement count
+ 1203 1203   000924 F7xx xx             tst     UPDATECOUNT             ;test if 0
+ 1204 1204   000927 260A                bne     NOUPDATE                ;if not, branch to NOUPDATE
+ 1205 1205   000929 180B 01xx           movb    #$01,UPDATEDISPLAY      ;tell M^2 to update display
+             00092D xx         
+ 1206 1206   00092E 180B FFxx           movb    #255,UPDATECOUNT        ;reset count
+             000932 xx         
+ 1207 1207                      NOUPDATE:        
+ 1208 1208   000933 F7xx xx             tst     RUN                     ;skip to interrupt if run is cleared, indicating new wave 
+ 1209 1209   000936 1827 011F           lbeq    NOT_YET                 ;branch to interrupt        
+ 1210 1210   00093A 16xx xx             jsr     READ_ENCODER            ;read the encoder
+ 1211 1211   00093D 7Cxx xx             std     ENCODER_COUNT           ;store in new encoder count
+ 1212 1212   000940 FCxx xx             ldd     ENCODER_COUNT
+ 1213 1213   000943 B3xx xx             subd    ENCODER_COUNT_OLD       ;subtract old from new
+ 1214 1214   000946 7Cxx xx             std     V_ACT                   ;store in VACT
+ 1215 1215   000949 CD00 0D             ldy     #13                     ;increase resolution for DAC
+ 1216 1216   00094C 13                  EMUL
+ 1217 1217   00094D C308 00             addd    #2048
+ 1218 1218   000950 16xx xx             jsr     OUTDACA                 ;OUTDAC to oscilloscope
+ 1219 1219   000953 1804 xxxx           movw    ENCODER_COUNT, ENCODER_COUNT_OLD
+             000957 xxxx       
+ 1220 1220   000959 F7xx xx             tst     OL_CL                   ;test if OL or CL
+ 1221 1221   00095C 2608                bne     CLOSED_LOOP             ;branch if set
+ 1222 1222   00095E FCxx xx             ldd     V_REF                   ;load VREF into D
+ 1223 1223   000961 7Cxx xx             std     ERR                     ;store in ERR
+ 1224 1224   000964 2009                bra     next_one                ;branch accordingly
+ 1225 1225                      CLOSED_LOOP:        
+ 1226 1226   000966 FCxx xx             ldd     V_REF                   ;loads Vref (setpoint)
+ 1227 1227   000969 B3xx xx             subd    V_ACT                   ;subtracts
+ 1228 1228   00096C 7Cxx xx             std     ERR                     ;stores Error Value
+ 1229 1229                      next_one:
+ 1230 1230   00096F FCxx xx             ldd     ERR                     ;load error into D
+ 1231 1231   000972 FDxx xx             ldy     KP                      ;load 1024*Kp
+ 1232 1232   000975 1813                EMULS                           ;multiply error by Vref
+ 1233 1233   000977 CE04 00             ldx     #1024                   ;loads 1024 to x
+ 1234 1234   00097A 1814                EDIVS                           ;divide error by 1024
+ 1235 1235   00097C 7Dxx xx             sty     KP_ERR                  ;store value in KP_ERROR
+ 1236 1236   00097F 2902                bvs     SATURATION              ;branch if overflowed
+ 1237 1237   000981 2014                bra     Integral_Calc           ;branch to integral sum
+ 1238 1238                      SATURATION:
+ 1239 1239   000983 18F7 xxxx           tstw    ERR                     ;test error
+ 1240 1240   000987 2F08                ble     Negative                ;branch if negative
+ 1241 1241   000989 1803 7FFF           movw    #$7FFF, KP_ERR          ;saturate KP
+             00098D xxxx       
+ 1242 1242   00098F 2006                bra     Integral_Calc           ;branch to integral calc
+ 1243 1243                      Negative:
+ 1244 1244   000991 1803 8000           movw    #$8000, KP_ERR          ;saturate KP
+             000995 xxxx       
+ 1245 1245                      Integral_Calc:
+ 1246 1246   000997 FCxx xx             ldd     ESUM_OLD                ;load old ESUM
+ 1247 1247   00099A FDxx xx             ldy     ERR                     ;load error into Y
+ 1248 1248   00099D 35                  pshy                            ;push onto the stack
+ 1249 1249   00099E E380                addd    0, SP                   ;add contents of stack to D
+
+Freescale HC12-Assembler 
+(c) Copyright Freescale 1987-2010
+
+ Abs. Rel.   Loc    Obj. code   Source line
+ ---- ----   ------ ---------   -----------
+ 1250 1250   0009A0 2815                bvc     done                    ;branch if no carry
+ 1251 1251   0009A2 7Cxx xx             std     ESUM                    ;store result in ESUM
+ 1252 1252   0009A5 E780                tst     0, SP                   ;test contents of stack
+ 1253 1253   0009A7 2A08                bpl     pos                     ;branch if positive
+ 1254 1254   0009A9 CC80 00             ldd     #$8000                  ;saturate with $8000
+ 1255 1255   0009AC 7Cxx xx             std     ESUM                    ;store into ESUM
+ 1256 1256   0009AF 2006                bra     done                    ;branch to DONE
+ 1257 1257                      pos:    
+ 1258 1258   0009B1 CC7F FF             ldd     #$7FFF                  ;saturate with $7FFF
+ 1259 1259   0009B4 7Cxx xx             std     ESUM                    ;store in ESUM
+ 1260 1260                      done:   
+ 1261 1261   0009B7 7Cxx xx             std     ESUM                    ;store ESUM in D
+ 1262 1262   0009BA 1804 xxxx           movw    ESUM, ESUM_OLD          ;move ESUM to old ESUM
+             0009BE xxxx       
+ 1263 1263   0009C0 31                  puly                            ;pull from the stack
+ 1264 1264   0009C1 FCxx xx             ldd     ESUM                    ;load ESUM
+ 1265 1265   0009C4 FDxx xx             ldy     KI                      ;load KI into Y
+ 1266 1266   0009C7 1813                EMULS                           ;multiply
+ 1267 1267   0009C9 CE04 00             ldx     #1024
+ 1268 1268   0009CC 1814                EDIVS                           ;divide
+ 1269 1269   0009CE 7Dxx xx             sty     KI_ERR                  ;store in KI error
+ 1270 1270   0009D1 2902                bvs     SATURATION_1            ;if overflowed, saturate
+ 1271 1271   0009D3 2014                bra     FINAL_ADD               ;branch to final addition
+ 1272 1272                      SATURATION_1:
+ 1273 1273   0009D5 18F7 xxxx           tstw    ESUM                    ;test ESUM
+ 1274 1274   0009D9 2F08                ble     Negative_1              ;branch if negative
+ 1275 1275   0009DB 1803 8000           movw    #$8000, KI_ERR          ;saturate with $8000
+             0009DF xxxx       
+ 1276 1276   0009E1 2006                bra     FINAL_ADD               ;branch to final SDBA     
+ 1277 1277                      Negative_1:
+ 1278 1278   0009E3 1803 7FFF           movw    #$7FFF, KI_ERR          ;saturate with $7FFF
+             0009E7 xxxx       
+ 1279 1279                      FINAL_ADD:          
+ 1280 1280   0009E9 FDxx xx             ldy     KI_ERR                  ;load KI
+ 1281 1281   0009EC FCxx xx             ldd     KP_ERR                  ;load KP
+ 1282 1282   0009EF 35                  pshy                            ;push KI
+ 1283 1283   0009F0 E380                addd    0, SP                   ;add to KP
+ 1284 1284   0009F2 2815                bvc     done_1                  ;branch if carry is cleared
+ 1285 1285   0009F4 7Cxx xx             std     A_INIT                  ;store value in a
+ 1286 1286   0009F7 E780                tst     0, SP                   ;test KI
+ 1287 1287   0009F9 2A08                bpl     pos_1                   ;branch if positive
+ 1288 1288   0009FB CC80 00             ldd     #$8000                  ;saturate with $8000
+ 1289 1289   0009FE 7Cxx xx             std     A_INIT                  ;store in a
+ 1290 1290   000A01 2006                bra     done_1                  ;branch to done_1
+ 1291 1291                      pos_1:
+ 1292 1292   000A03 CC7F FF             ldd     #$7FFF                  ;saturate with $7FFF
+ 1293 1293   000A06 7Cxx xx             std     A_INIT                  ;store in a
+ 1294 1294                      done_1:
+ 1295 1295   000A09 7Cxx xx             std     A_INIT                  ;store ina
+ 1296 1296   000A0C 31                  puly                            ;pull from KI, store in Y
+ 1297 1297   000A0D FCxx xx             ldd     A_INIT                  ;load a
+ 1298 1298   000A10 8C02 71             cpd     #625                    ;compare to 625
+ 1299 1299   000A13 2C0D                bge     SAT_HIGH                ;if higher, saturate high
+ 1300 1300   000A15 FCxx xx             ldd     A_INIT
+ 1301 1301   000A18 8CFD 8F             cpd     #-625                   ;compare to -625
+ 1302 1302   000A1B 2F0D                ble     SAT_LOW                 ;if lower, saturate low
+ 1303 1303   000A1D 7Cxx xx             std     A_STAR                  ;store into A_STAR
+ 1304 1304   000A20 2010                bra     A_STAR_SET              ;branch to A_STAR_SET
+ 1305 1305                      SAT_HIGH:
+ 1306 1306   000A22 1803 0271           movw    #625, A_STAR            ;saturate high
+             000A26 xxxx       
+ 1307 1307   000A28 2008                bra     A_STAR_SET
+ 1308 1308                      SAT_LOW:
+ 1309 1309   000A2A 1803 FD8F           movw    #-625, A_STAR           ;saturate low
+
+Freescale HC12-Assembler 
+(c) Copyright Freescale 1987-2010
+
+ Abs. Rel.   Loc    Obj. code   Source line
+ ---- ----   ------ ---------   -----------
+             000A2E xxxx       
+ 1310 1310   000A30 2000                bra     A_STAR_SET 
+ 1311 1311                      A_STAR_SET:
+ 1312 1312   000A32 FDxx xx             ldy     A_STAR                  ;load A_STAR into Y
+ 1313 1313   000A35 CC00 64             ldd     #100                    ;load 100
+ 1314 1314   000A38 1813                EMULS                           ;multiply
+ 1315 1315   000A3A CE02 71             ldx     #625                    ;load 625
+ 1316 1316   000A3D 1814                EDIVS                           ;divide
+ 1317 1317   000A3F 7Dxx xx             sty     EFFORT                  ;store the result in EFFORT
+ 1318 1318   000A42 18F7 xxxx           tstw    EFFORT                  ;test EFFOT
+ 1319 1319   000A46 2000                bra     EFFORT_SET
+ 1320 1320                      EFFORT_SET:
+ 1321 1321   000A48 FCxx xx             ldd     A_STAR                  ;update the motor             
+ 1322 1322   000A4B 16xx xx             jsr     UPDATE_MOTOR
+ 1323 1323                      INTER:       
+ 1324 1324   000A4E DC50                ldd     TC0                   	;Stores Timer Channel 0 Register in D
+ 1325 1325   000A50 F3xx xx             addd    INTERVAL              	;adds contents of interval to contents of D
+ 1326 1326   000A53 5C50                std     TC0                   	;stores contents of d in timer channel 0 register
+ 1327 1327   000A55 4C4E 01             bset    TFLG1, $01            	;clears C0F; 
+ 1328 1328   000A58 0B                  rti
+ 1329 1329                      NOT_YET:
+ 1330 1330   000A59 16xx xx             jsr     READ_ENCODER            ;read encoder
+ 1331 1331   000A5C 7Cxx xx             std     ENCODER_COUNT           ;store in encoder count
+ 1332 1332   000A5F FCxx xx             ldd     ENCODER_COUNT           ;load encoder count
+ 1333 1333   000A62 B3xx xx             subd    ENCODER_COUNT_OLD       ;subtract old
+ 1334 1334   000A65 7Cxx xx             std     V_ACT                   ;store D in VACT
+ 1335 1335   000A68 1804 xxxx           movw    ENCODER_COUNT, ENCODER_COUNT_OLD
+             000A6C xxxx       
+ 1336 1336   000A6E FCxx xx             ldd     V_REF                   ;loads Vref (setpoint)
+ 1337 1337   000A71 B3xx xx             subd    V_ACT                   ;subtracts
+ 1338 1338   000A74 7Cxx xx             std     ERR                     ;stores Error Value
+ 1339 1339   000A77 1803 0000           movw    #$0000, EFFORT
+             000A7B xxxx       
+ 1340 1340   000A7D CC00 00             ldd     #$0000             
+ 1341 1341   000A80 16xx xx             jsr     UPDATE_MOTOR
+ 1342 1342   000A83 DC50                ldd     TC0                   	;Stores Timer Channel 0 Register in D
+ 1343 1343   000A85 F3xx xx             addd    INTERVAL              	;adds contents of interval to contents of D
+ 1344 1344   000A88 5C50                std     TC0                   	;stores contents of d in timer channel 0 register
+ 1345 1345   000A8A 4C4E 01             bset    TFLG1, $01            	;clears C0F;       
+ 1346 1346   000A8D 0B                  rti          
+ 1347 1347                      
+ 1348 1348                      ;/------------------------------------------------------------------------------------\
+ 1349 1349                      ;| ASCII Messages and Constant Data                                                   |
+ 1350 1350                      ;\------------------------------------------------------------------------------------/
+ 1351 1351                      ; Any constants can be defined here
+ 1352 1352                      
+ 1353 1353                      MESSAGE: 
+ 1354 1354   000A8E 6E65 775F           VREF_MESS:    DC.B  'new_Vref=                               ',$00
+             000A92 5672 6566  
+             000A96 3D20 2020  
+             000A9A 2020 2020  
+             000A9E 2020 2020  
+             000AA2 2020 2020  
+             000AA6 2020 2020  
+             000AAA 2020 2020  
+             000AAE 2020 2020  
+             000AB2 2020 2020  
+             000AB6 00         
+ 1355 1355   000AB7 2020 2020           FIVEBLANKS:   DC.B  '     ',$00
+             000ABB 2000       
+ 1356 1356   000ABD 5255 4E00           RUN_MESS:     DC.B  'RUN',$00
+ 1357 1357   000AC1 5354 5000           STP_MESS:     DC.B  'STP',$00
+ 1358 1358   000AC5 4F4C 00             OL_MESS:      DC.B  'OL',$00
+ 1359 1359   000AC8 434C 00             CL_MESS:      DC.B  'CL',$00
+
+Freescale HC12-Assembler 
+(c) Copyright Freescale 1987-2010
+
+ Abs. Rel.   Loc    Obj. code   Source line
+ ---- ----   ------ ---------   -----------
+ 1360 1360   000ACB 445F 4F4E           D_ON_MESS:    DC.B  'D_ON ',$00
+             000ACF 2000       
+ 1361 1361   000AD1 445F 4F46           D_OFF_MESS:   DC.B  'D_OFF',$00                  
+             000AD5 4600       
+ 1362 1362                      
+ 1363 1363                      
+ 1364 1364                      ;/------------------------------------------------------------------------------------\
+ 1365 1365                      ;| Vectors                                                                            |
+ 1366 1366                      ;\------------------------------------------------------------------------------------/
+ 1367 1367                      ; Add interrupt and reset vectors here
+ 1368 1368                      
+ 1369 1369                              ORG   $FFFE                    ; reset vector address
+ 1370 1370  a00FFFE xxxx                DC.W  Entry
+ 1371 1371                              ORG   $FFEE                    ; Key Wakeup interrupt vector address [Port J]
+ 1372 1372  a00FFEE xxxx                DC.W  interrupt
+ 1373 1373                              ORG   $FFCE                    ; Key Wakeup interrupt vector address [Port J]
+ 1374 1374  a00FFCE xxxx                DC.W  ISR_KEYPAD

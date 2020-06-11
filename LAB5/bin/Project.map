@@ -1,0 +1,926 @@
+
+PROGRAM "U:\LAB5FINAL\LAB5_12-5\LAB5\bin\Project.abs"
+
+*********************************************************************************************
+TARGET SECTION
+---------------------------------------------------------------------------------------------
+Processor   : Freescale HC12
+Memory Model: SMALL
+File Format : ELF\DWARF 2.0
+Linker      : SmartLinker V-5.0.40 Build 10203, Jul 23 2010
+
+*********************************************************************************************
+FILE SECTION
+---------------------------------------------------------------------------------------------
+main.asm.o                              Model: SMALL,         Lang: Assembler
+Lib_DAC.asm.o (ME305LIBV2.1.lib)        Model: SMALL,         Lang: Assembler
+Lib_Delay.asm.o (ME305LIBV2.1.lib)      Model: SMALL,         Lang: Assembler
+Lib_Encoder.asm.o (ME305LIBV2.1.lib)    Model: SMALL,         Lang: Assembler
+Lib_Keypad.asm.o (ME305LIBV2.1.lib)     Model: SMALL,         Lang: Assembler
+Lib_LCD.asm.o (ME305LIBV2.1.lib)        Model: SMALL,         Lang: Assembler
+Lib_Motor.asm.o (ME305LIBV2.1.lib)      Model: SMALL,         Lang: Assembler
+Lib_Startup.asm.o (ME305LIBV2.1.lib)    Model: SMALL,         Lang: Assembler
+
+*********************************************************************************************
+STARTUP SECTION
+---------------------------------------------------------------------------------------------
+Entry point: 0xC000 (Entry)
+
+*********************************************************************************************
+SECTION-ALLOCATION SECTION
+Section Name                    Size  Type     From       To       Segment
+---------------------------------------------------------------------------------------------
+.init                            227     R     0xC000     0xC0E2   ROM_C000
+.stack                          1024   R/W     0x2000     0x23FF   RAM
+.data                             76   R/W     0x2400     0x244B   RAM
+LIBRARY_RAM                       35   R/W     0x1000     0x1022   LIBRAM
+MyCode                          2775     R     0x4000     0x4AD6   ROM_4000
+Lib_Motor                        145     R      0x800      0x890   EEPROM
+Lib_DAC                           45     R      0x891      0x8BD   EEPROM
+Lib_Keypad                       117     R      0x8BE      0x932   EEPROM
+Lib_Encoder                      177     R      0x933      0x9E3   EEPROM
+Lib_LCD                          578     R      0x9E4      0xC25   EEPROM
+Lib_Delay                         56     R      0xC26      0xC5D   EEPROM
+main.asm__ORG00001                 2     R     0xFFFE     0xFFFF   .absSeg0
+main.asm__ORG00002                 2     R     0xFFEE     0xFFEF   .absSeg1
+main.asm__ORG00003                 2     R     0xFFCE     0xFFCF   .absSeg2
+
+Summary of section sizes per section type:
+READ_ONLY (R):        101E (dec:     4126)
+READ_WRITE (R/W):      46F (dec:     1135)
+
+*********************************************************************************************
+VECTOR-ALLOCATION SECTION
+    Address     InitValue   InitFunction
+---------------------------------------------------------------------------------------------
+
+*********************************************************************************************
+OBJECT-ALLOCATION SECTION
+     Name               Module                 Addr   hSize   dSize     Ref    Section   RLIB
+---------------------------------------------------------------------------------------------
+MODULE:                 -- main.asm.o --
+- PROCEDURES:
+     main                                      4000     12C     300       1   MyCode      
+     Top                                       412C      11      17       0   MyCode      
+     MOTOR                                     413D       8       8       1   MyCode      
+     MOTOR_STATE_1                             4145      15      21       0   MyCode      
+     MOTOR_STATE_2                             415A       1       1       0   MyCode      
+     TC0_                                      415B       8       8       1   MyCode      
+     TC0_STATE_0                               4163      21      33       0   MyCode      
+     TC0_STATE_1                               4184       1       1       0   MyCode      
+     MASTERMIND                                4185       B      11       1   MyCode      
+     MASTERMIND_INIT                           4190      14      20       0   MyCode      
+     MASTERMIND_WAIT_FOR_DISPLAY               41A4       6       6       0   MyCode      
+     DISPLAYCHECK_2                            41AA       6       6       0   MyCode      
+     DISPLAYCHECK_3                            41B0       6       6       0   MyCode      
+     exit2                                     41B6       6       6       0   MyCode      
+     MASTERMIND_HUB                            41BC       5       5       0   MyCode      
+     HUBANALYZE                                41C1       6       6       0   MyCode      
+     ANALYZE                                   41C7      41      65       0   MyCode      
+     UPDATEDISP                                4208      3A      58       0   MyCode      
+     EXIT_MAST                                 4242       1       1       0   MyCode      
+     MASTERMIND_BSPACE                         4243      11      17       0   MyCode      
+     BSCONTD_VREF                              4254      20      32       0   MyCode      
+     BSCONTD_KP                                4274      20      32       0   MyCode      
+     BSCONTD_KI                                4294      20      32       0   MyCode      
+     TEST_NEGATIVE                             42B4       D      13       0   MyCode      
+     BSINVALID                                 42C1       6       6       0   MyCode      
+     MASTERMIND_ENTER                          42C7      1A      26       0   MyCode      
+     VREF_CONV                                 42E1      27      39       0   MyCode      
+     OLCL                                      4308       B      11       0   MyCode      
+     REPRINT_OL                                4313       6       6       0   MyCode      
+     REPRINTD_RUN0                             4319       7       7       0   MyCode      
+     KP_CONV                                   4320       C      12       0   MyCode      
+     KI_CONV                                   432C       C      12       0   MyCode      
+     VREF_CONVERSION                           4338      16      22       1   MyCode      
+     VREF_LOOP                                 434E      32      50       0   MyCode      
+     VREF_CONVERT_SET                          4380       8       8       0   MyCode      
+     KP_CONVERSION                             4388      12      18       1   MyCode      
+     KP_LOOP                                   439A      31      49       0   MyCode      
+     KI_CONVERSION                             43CB      12      18       1   MyCode      
+     KI_LOOP                                   43DD      36      54       0   MyCode      
+     KI_EXIT                                   4413       4       4       0   MyCode      
+     NEGATIVE_SIGN                             4417      24      36       0   MyCode      
+     MASTERMIND_DIGIT                          443B      14      20       0   MyCode      
+     VREF_DIGITS                               444F      17      23       0   MyCode      
+     VREF_CONTD1                               4466       B      11       0   MyCode      
+     VREF_CONTD                                4471      1A      26       0   MyCode      
+     INVALIDENTRY                              448B       6       6       0   MyCode      
+     KP_DIGITS                                 4491      2C      44       0   MyCode      
+     KI_DIGITS                                 44BD      2C      44       0   MyCode      
+     TOGGLEA                                   44E9      11      17       0   MyCode      
+     TURN_A_ON                                 44FA      14      20       0   MyCode      
+     TOGGLEB                                   450E      11      17       0   MyCode      
+     TURN_B_ON                                 451F       E      14       0   MyCode      
+     VREF_1                                    452D      36      54       0   MyCode      
+     KP_1                                      4563      42      66       0   MyCode      
+     KI_1                                      45A5      46      70       0   MyCode      
+     TOGGLEF                                   45EB      15      21       0   MyCode      
+     TURN_F_ON                                 4600       E      14       0   MyCode      
+     KEYPAD                                    460E       C      12       2   MyCode      
+     KEYPAD_STATE_0                            461A       C      12       0   MyCode      
+     KEYPAD_STATE_1                            4626      16      22       0   MyCode      
+     KEYPAD_STATE_2                            463C       6       6       0   MyCode      
+     set1                                      4642       6       6       0   MyCode      
+     exit                                      4648       1       1       0   MyCode      
+     DISPLAY                                   4649      4F      79       1   MyCode      
+     INIT                                      4698       6       6       0   MyCode      
+     dispstate1                                469E      63      99       0   MyCode      
+     dispstate2                                4701      1D      29       0   MyCode      
+     dispstate3                                471E      12      18       0   MyCode      
+     dispstate4                                4730       F      15       0   MyCode      
+     regular4                                  473F       3       3       0   MyCode      
+     bottom4                                   4742      12      18       0   MyCode      
+     exit4                                     4754       1       1       0   MyCode      
+     dispstate4a                               4755      11      17       0   MyCode      
+     dispstate5                                4766       F      15       0   MyCode      
+     regular5                                  4775       3       3       0   MyCode      
+     bottom5                                   4778      12      18       0   MyCode      
+     exit5                                     478A       1       1       0   MyCode      
+     dispstate5a                               478B      11      17       0   MyCode      
+     dispstate6                                479C       F      15       0   MyCode      
+     regular6                                  47AB       3       3       0   MyCode      
+     bottom6                                   47AE      12      18       0   MyCode      
+     exit6                                     47C0       1       1       0   MyCode      
+     dispstate6a                               47C1      11      17       0   MyCode      
+     dispstate7                                47D2       F      15       0   MyCode      
+     regular7                                  47E1       3       3       0   MyCode      
+     bottom7                                   47E4       D      13       0   MyCode      
+     exit7                                     47F1       1       1       0   MyCode      
+     dispstate8                                47F2       F      15       0   MyCode      
+     regular8                                  4801       3       3       0   MyCode      
+     bottom8                                   4804      14      20       0   MyCode      
+     clear8                                    4818       3       3       0   MyCode      
+     exit8                                     481B       1       1       0   MyCode      
+     RESET_KI_ADDRESS                          481C       7       7       0   MyCode      
+     RESET_KP_ADDRESS                          4823       7       7       0   MyCode      
+     dispstate9                                482A       F      15       0   MyCode      
+     regular9                                  4839       3       3       0   MyCode      
+     bottom9                                   483C       D      13       0   MyCode      
+     exit9                                     4849       1       1       0   MyCode      
+     dispstate10                               484A       F      15       0   MyCode      
+     regular10                                 4859       3       3       0   MyCode      
+     bottom10                                  485C       D      13       0   MyCode      
+     exit10                                    4869       1       1       0   MyCode      
+     dispstate11                               486A       F      15       0   MyCode      
+     regular11                                 4879       3       3       0   MyCode      
+     bottom11                                  487C       D      13       0   MyCode      
+     exit11                                    4889       1       1       0   MyCode      
+     dispstate12                               488A       F      15       0   MyCode      
+     regular12                                 4899       3       3       0   MyCode      
+     bottom12                                  489C       D      13       0   MyCode      
+     exit12                                    48A9       1       1       0   MyCode      
+     putchar                                   48AA      10      16       9   MyCode      
+     exit1                                     48BA       6       6       0   MyCode      
+     putchar_1                                 48C0       A      10       9   MyCode      
+     BINARY2ASCII                              48CA      20      32       4   MyCode      
+     subloop                                   48EA      18      24       0   MyCode      
+     subfill                                   4902       E      14       0   MyCode      
+     subloadneg                                4910       C      12       0   MyCode      
+     interrupt                                 491C      17      23       1   MyCode      
+     NOUPDATE                                  4933      33      51       0   MyCode      
+     CLOSED_LOOP                               4966       9       9       0   MyCode      
+     next_one                                  496F      14      20       0   MyCode      
+     SATURATION                                4983       E      14       0   MyCode      
+     Negative                                  4991       6       6       0   MyCode      
+     Integral_Calc                             4997      1A      26       0   MyCode      
+     pos                                       49B1       6       6       0   MyCode      
+     done                                      49B7      1E      30       0   MyCode      
+     SATURATION_1                              49D5       E      14       0   MyCode      
+     Negative_1                                49E3       6       6       0   MyCode      
+     FINAL_ADD                                 49E9      1A      26       0   MyCode      
+     pos_1                                     4A03       6       6       0   MyCode      
+     done_1                                    4A09      19      25       0   MyCode      
+     SAT_HIGH                                  4A22       8       8       0   MyCode      
+     SAT_LOW                                   4A2A       8       8       0   MyCode      
+     A_STAR_SET                                4A32      16      22       0   MyCode      
+     EFFORT_SET                                4A48      11      17       0   MyCode      
+     NOT_YET                                   4A59      35      53       0   MyCode      
+     VREF_MESS                                 4A8E      29      41       1   MyCode      
+     FIVEBLANKS                                4AB7       6       6       2   MyCode      
+     RUN_MESS                                  4ABD       4       4       1   MyCode      
+     STP_MESS                                  4AC1       4       4       1   MyCode      
+     OL_MESS                                   4AC5       3       3       1   MyCode      
+     CL_MESS                                   4AC8       3       3       1   MyCode      
+     D_ON_MESS                                 4ACB       6       6       1   MyCode      
+     D_OFF_MESS                                4AD1       6       6       1   MyCode      
+- VARIABLES:
+     MOTOR_STATE                               2400       1       1       3   .data       
+     TC0_STATE                                 2401       1       1       4   .data       
+     dispstate                                 2402       1       1      16   .data       
+     KEYPAD_STATE                              2403       1       1       5   .data       
+     MASTERMIND_STATE                          2404       1       1       4   .data       
+     KEY_BUF                                   2405       1       1      11   .data       
+     KEY_FLG                                   2406       1       1      26   .data       
+     INTERVAL                                  2407       2       2       4   .data       
+     RUN                                       2409       1       1       9   .data       
+     D_ON_D_OFF                                240A       1       1       5   .data       
+     V_REF                                     240B       2       2      11   .data       
+     V_REF_BUF                                 240D       4       4       6   .data       
+     V_ACT                                     2411       2       2       6   .data       
+     VREF_PROMPT                               2413       1       1      11   .data       
+     VREF_CURSOR                               2414       1       1       4   .data       
+     KP                                        2415       2       2       7   .data       
+     KP_PROMPT                                 2417       1       1      10   .data       
+     KP_CURSOR                                 2418       1       1       5   .data       
+     KI                                        2419       2       2       9   .data       
+     KI_PROMPT                                 241B       1       1      10   .data       
+     KI_CURSOR                                 241C       1       1       5   .data       
+     FIRSTCHAR                                 241D       1       1      22   .data       
+     TAKE2COMP                                 241E       1       1       7   .data       
+     OL_CL                                     241F       1       1       7   .data       
+     BACKSPACEDISP                             2420       1       1       7   .data       
+     POINTER                                   2421       2       2      13   .data       
+     ECHO                                      2423       1       1       7   .data       
+     COUNT                                     2424       1       1      14   .data       
+     DIGIT_COUNT                               2425       1       1      25   .data       
+     DPTR                                      2426       2       2       4   .data       
+     D_VREF                                    2428       1       1       4   .data       
+     D_KP                                      2429       1       1       4   .data       
+     D_KI                                      242A       1       1       4   .data       
+     D_RUN                                     242B       1       1       5   .data       
+     D_STP                                     242C       1       1       8   .data       
+     D_CL                                      242D       1       1       6   .data       
+     D_OL                                      242E       1       1       5   .data       
+     D_D_ON                                    242F       1       1       6   .data       
+     D_D_OFF                                   2430       1       1       4   .data       
+     UPDATEDISPLAY                             2431       1       1       4   .data       
+     ENCODER_COUNT                             2432       2       2       7   .data       
+     ENCODER_COUNT_OLD                         2434       2       2       6   .data       
+     KP_ERR                                    2436       2       2       4   .data       
+     KI_ERR                                    2438       2       2       4   .data       
+     ESUM                                      243A       2       2       8   .data       
+     A_STAR                                    243C       2       2       5   .data       
+     A_INIT                                    243E       2       2       6   .data       
+     ERR                                       2440       2       2       8   .data       
+     ESUM_OLD                                  2442       2       2       3   .data       
+     EFFORT                                    2444       2       2       6   .data       
+     TEMP1                                     2446       2       2       4   .data       
+     UPDATECOUNT                               2448       1       1       4   .data       
+     TEMPADDR                                  2449       1       1       2   .data       
+     REMAIN                                    244A       2       2       0   .data       
+     VAR00001                                  FFFE       2       2       0   .text       
+     VAR00002                                  FFEE       2       2       0   .text       
+     VAR00003                                  FFCE       2       2       0   .text       
+MODULE:                 -- Lib_DAC.asm.o (ME305LIBV2.1.lib) --
+- PROCEDURES:
+     OUTDACA                                    891       6       6       1   Lib_DAC     
+     OUTDACB                                    897       4       4       0   Lib_DAC     
+     OUTDAC                                     89B      23      35       0   Lib_DAC     
+- VARIABLES:
+MODULE:                 -- Lib_Delay.asm.o (ME305LIBV2.1.lib) --
+- PROCEDURES:
+     DELAY_MICRO                                C26       F      15       5   Lib_Delay   
+     MICRO_Loop                                 C35       D      13       0   Lib_Delay   
+     DELAY_MILLI                                C42       F      15       2   Lib_Delay   
+     MILLI_Loop                                 C51       D      13       0   Lib_Delay   
+- VARIABLES:
+MODULE:                 -- Lib_Encoder.asm.o (ME305LIBV2.1.lib) --
+- PROCEDURES:
+     STARTUP_ENCODER                            933      51      81       1   Lib_Encoder 
+     READ_ENCODER                               984      37      55       3   Lib_Encoder 
+     DISABLE_ENCODER                            9BB      29      41       1   Lib_Encoder 
+- VARIABLES:
+MODULE:                 -- Lib_Keypad.asm.o (ME305LIBV2.1.lib) --
+- PROCEDURES:
+     INITKEY                                    8BE      35      53       1   Lib_Keypad  
+     GETCHAR                                    8F3      10      16       1   Lib_Keypad  
+     ISR_KEYPAD                                 903      1C      28       1   Lib_Keypad  
+     VAR00001                                   91F      14      20       1   Lib_Keypad  
+- VARIABLES:
+     KEYREADY                                  1000       1       1       0   LIBRARY_RAM 
+     LCHARACTER                                1001       1       1       4   LIBRARY_RAM 
+     LKEY_FLG                                  1002       1       1       5   LIBRARY_RAM 
+MODULE:                 -- Lib_LCD.asm.o (ME305LIBV2.1.lib) --
+- PROCEDURES:
+     INITLCD                                    9E4      6F     111       1   Lib_LCD     
+     LCD_RESET                                  A53      19      25       3   Lib_LCD     
+     LCD_WRITE                                  A6C      18      24       7   Lib_LCD     
+     BF_TEST                                    A84      14      20       0   Lib_LCD     
+     LCD_READ                                   A98      14      20       2   Lib_LCD     
+     DISP_OFF                                   AAC       8       8       1   Lib_LCD     
+     DISP_ON                                    AB4       8       8       1   Lib_LCD     
+     CURSOR_ON                                  ABC       8       8       5   Lib_LCD     
+     CURSOR_OFF                                 AC4       1       1       0   Lib_LCD     
+     SETADDR                                    AC5       E      14      22   Lib_LCD     
+     GETADDR                                    AD3       C      12       6   Lib_LCD     
+     CLRSCREEN                                  ADF      1C      28       3   Lib_LCD     
+     OUTCHAR_AT                                 AFB       3       3       0   Lib_LCD     
+     OUTCHAR                                    AFE       C      12       5   Lib_LCD     
+     BS_HANDLE                                  B0A       C      12       0   Lib_LCD     
+     OUTSTRING_AT                               B16       3       3       0   Lib_LCD     
+     OUTSTRING                                  B19       2       2      10   Lib_LCD     
+     OUTLOOP                                    B1B       9       9       0   Lib_LCD     
+     OUTEXIT                                    B24       3       3       0   Lib_LCD     
+     LCDTEMPLATE                                B27      1E      30       2   Lib_LCD     
+     UPDATELCD_L1                               B45      31      49       2   Lib_LCD     
+     UPDATELCD_L2                               B76      1B      27       1   Lib_LCD     
+     INITMESS_L1                                B91      27      39       1   Lib_LCD     
+     INITMESS_L2                                BB8      28      40       1   Lib_LCD     
+     LCDTEMPLATE_L1                             BE0      29      41       1   Lib_LCD     
+     LCDTEMPLATE_L2                             C09      1D      29       1   Lib_LCD     
+- VARIABLES:
+     LVREF_BUF                                 1003       4       4       4   LIBRARY_RAM 
+     LVREF_NULL                                1007       1       1       0   LIBRARY_RAM 
+     LVACT_BUF                                 1008       4       4       4   LIBRARY_RAM 
+     LVACT_NULL                                100C       1       1       0   LIBRARY_RAM 
+     LERR_BUF                                  100D       4       4       4   LIBRARY_RAM 
+     LERR_NULL                                 1011       1       1       0   LIBRARY_RAM 
+     LEFF_BUF                                  1012       4       4       4   LIBRARY_RAM 
+     LEFF_NULL                                 1016       1       1       0   LIBRARY_RAM 
+     LKP_BUF                                   1017       5       5       7   LIBRARY_RAM 
+     LKP_NULL                                  101C       1       1       0   LIBRARY_RAM 
+     LKI_BUF                                   101D       5       5       7   LIBRARY_RAM 
+     LKI_NULL                                  1022       1       1       0   LIBRARY_RAM 
+MODULE:                 -- Lib_Motor.asm.o (ME305LIBV2.1.lib) --
+- PROCEDURES:
+     STARTUP_MOTOR                              800      22      34       1   Lib_Motor   
+     ENABLE_MOTOR                               822       D      13       1   Lib_Motor   
+     DISABLE_MOTOR                              82F       D      13       1   Lib_Motor   
+     UPDATE_MOTOR                               83C      14      20       2   Lib_Motor   
+     CCW_MOTOR                                  850       F      15       0   Lib_Motor   
+     BRAKE_MOTOR                                85F       D      13       0   Lib_Motor   
+     CURRENT_MOTOR                              86C      25      37       0   Lib_Motor   
+- VARIABLES:
+MODULE:                 -- Lib_Startup.asm.o (ME305LIBV2.1.lib) --
+- PROCEDURES:
+     _Startup                                  C000      13      19       0   .init       
+     Entry                                     C000       0       0       1   .init       
+     STARTUP_PLL                               C013      20      32       1   .init       
+     STARTUP_SPI0                              C033      45      69       1   .init       
+     STARTUP_ATD1                              C078      1A      26       0   .init       
+     STARTUP_PWM                               C092      1D      29       1   .init       
+     STARTUP_IO                                C0AF      34      52       1   .init       
+- VARIABLES:
+- LABELS:
+     __SEG_END_SSTACK                          2400       0       0       1               
+
+*********************************************************************************************
+MODULE STATISTIC
+  Name                                      Data   Code  Const
+---------------------------------------------------------------------------------------------
+  main.asm.o                                  76   2775      6
+  Lib_DAC.asm.o (ME305LIBV2.1.lib)             0     45      0
+  Lib_Delay.asm.o (ME305LIBV2.1.lib)           0     56      0
+  Lib_Encoder.asm.o (ME305LIBV2.1.lib)         0    177      0
+  Lib_Keypad.asm.o (ME305LIBV2.1.lib)          3    117      0
+  Lib_LCD.asm.o (ME305LIBV2.1.lib)            32    578      0
+  Lib_Motor.asm.o (ME305LIBV2.1.lib)           0    145      0
+  Lib_Startup.asm.o (ME305LIBV2.1.lib)         0    227      0
+  other                                     1024      0      0
+
+*********************************************************************************************
+SECTION USE IN OBJECT-ALLOCATION SECTION
+---------------------------------------------------------------------------------------------
+SECTION: ".text"
+  VAR00003 VAR00002 VAR00001 
+SECTION: ".data"
+  MOTOR_STATE TC0_STATE dispstate KEYPAD_STATE MASTERMIND_STATE KEY_BUF 
+  KEY_FLG INTERVAL RUN D_ON_D_OFF V_REF V_REF_BUF V_ACT VREF_PROMPT VREF_CURSOR 
+  KP KP_PROMPT KP_CURSOR KI KI_PROMPT KI_CURSOR FIRSTCHAR TAKE2COMP OL_CL 
+  BACKSPACEDISP POINTER ECHO COUNT DIGIT_COUNT DPTR D_VREF D_KP D_KI D_RUN 
+  D_STP D_CL D_OL D_D_ON D_D_OFF UPDATEDISPLAY ENCODER_COUNT ENCODER_COUNT_OLD 
+  KP_ERR KI_ERR ESUM A_STAR A_INIT ERR ESUM_OLD EFFORT TEMP1 UPDATECOUNT 
+  TEMPADDR REMAIN 
+SECTION: ".init"
+  Entry _Startup STARTUP_PLL STARTUP_SPI0 STARTUP_ATD1 STARTUP_PWM STARTUP_IO 
+SECTION: "LIBRARY_RAM"
+  KEYREADY LCHARACTER LKEY_FLG LVREF_BUF LVREF_NULL LVACT_BUF LVACT_NULL 
+  LERR_BUF LERR_NULL LEFF_BUF LEFF_NULL LKP_BUF LKP_NULL LKI_BUF LKI_NULL 
+SECTION: "MyCode"
+  main Top MOTOR MOTOR_STATE_1 MOTOR_STATE_2 TC0_ TC0_STATE_0 TC0_STATE_1 
+  MASTERMIND MASTERMIND_INIT MASTERMIND_WAIT_FOR_DISPLAY DISPLAYCHECK_2 
+  DISPLAYCHECK_3 exit2 MASTERMIND_HUB HUBANALYZE ANALYZE UPDATEDISP EXIT_MAST 
+  MASTERMIND_BSPACE BSCONTD_VREF BSCONTD_KP BSCONTD_KI TEST_NEGATIVE BSINVALID 
+  MASTERMIND_ENTER VREF_CONV OLCL REPRINT_OL REPRINTD_RUN0 KP_CONV KI_CONV 
+  VREF_CONVERSION VREF_LOOP VREF_CONVERT_SET KP_CONVERSION KP_LOOP 
+  KI_CONVERSION KI_LOOP KI_EXIT NEGATIVE_SIGN MASTERMIND_DIGIT VREF_DIGITS 
+  VREF_CONTD1 VREF_CONTD INVALIDENTRY KP_DIGITS KI_DIGITS TOGGLEA TURN_A_ON 
+  TOGGLEB TURN_B_ON VREF_1 KP_1 KI_1 TOGGLEF TURN_F_ON KEYPAD KEYPAD_STATE_0 
+  KEYPAD_STATE_1 KEYPAD_STATE_2 set1 exit DISPLAY INIT dispstate1 dispstate2 
+  dispstate3 dispstate4 regular4 bottom4 exit4 dispstate4a dispstate5 regular5 
+  bottom5 exit5 dispstate5a dispstate6 regular6 bottom6 exit6 dispstate6a 
+  dispstate7 regular7 bottom7 exit7 dispstate8 regular8 bottom8 clear8 exit8 
+  RESET_KI_ADDRESS RESET_KP_ADDRESS dispstate9 regular9 bottom9 exit9 
+  dispstate10 regular10 bottom10 exit10 dispstate11 regular11 bottom11 exit11 
+  dispstate12 regular12 bottom12 exit12 putchar exit1 putchar_1 BINARY2ASCII 
+  subloop subfill subloadneg interrupt NOUPDATE CLOSED_LOOP next_one SATURATION 
+  Negative Integral_Calc pos done SATURATION_1 Negative_1 FINAL_ADD pos_1 
+  done_1 SAT_HIGH SAT_LOW A_STAR_SET EFFORT_SET NOT_YET VREF_MESS FIVEBLANKS 
+  RUN_MESS STP_MESS OL_MESS CL_MESS D_ON_MESS D_OFF_MESS 
+SECTION: "Lib_Motor"
+  STARTUP_MOTOR ENABLE_MOTOR DISABLE_MOTOR UPDATE_MOTOR CCW_MOTOR BRAKE_MOTOR 
+  CURRENT_MOTOR 
+SECTION: "Lib_DAC"
+  OUTDACA OUTDACB OUTDAC 
+SECTION: "Lib_Keypad"
+  INITKEY GETCHAR ISR_KEYPAD VAR00001 
+SECTION: "Lib_Encoder"
+  STARTUP_ENCODER READ_ENCODER DISABLE_ENCODER 
+SECTION: "Lib_LCD"
+  INITLCD LCD_RESET LCD_WRITE BF_TEST LCD_READ DISP_OFF DISP_ON CURSOR_ON 
+  CURSOR_OFF SETADDR GETADDR CLRSCREEN OUTCHAR_AT OUTCHAR BS_HANDLE 
+  OUTSTRING_AT OUTSTRING OUTLOOP OUTEXIT LCDTEMPLATE UPDATELCD_L1 UPDATELCD_L2 
+  INITMESS_L1 INITMESS_L2 LCDTEMPLATE_L1 LCDTEMPLATE_L2 
+SECTION: "Lib_Delay"
+  DELAY_MICRO MICRO_Loop DELAY_MILLI MILLI_Loop 
+
+*********************************************************************************************
+OBJECT LIST SORTED BY ADDRESS
+     Name                                      Addr   hSize   dSize     Ref    Section   RLIB
+---------------------------------------------------------------------------------------------
+     STARTUP_MOTOR                              800      22      34       1   Lib_Motor   
+     ENABLE_MOTOR                               822       D      13       1   Lib_Motor   
+     DISABLE_MOTOR                              82F       D      13       1   Lib_Motor   
+     UPDATE_MOTOR                               83C      14      20       2   Lib_Motor   
+     CCW_MOTOR                                  850       F      15       0   Lib_Motor   
+     BRAKE_MOTOR                                85F       D      13       0   Lib_Motor   
+     CURRENT_MOTOR                              86C      25      37       0   Lib_Motor   
+     OUTDACA                                    891       6       6       1   Lib_DAC     
+     OUTDACB                                    897       4       4       0   Lib_DAC     
+     OUTDAC                                     89B      23      35       0   Lib_DAC     
+     INITKEY                                    8BE      35      53       1   Lib_Keypad  
+     GETCHAR                                    8F3      10      16       1   Lib_Keypad  
+     ISR_KEYPAD                                 903      1C      28       1   Lib_Keypad  
+     VAR00001                                   91F      14      20       1   Lib_Keypad  
+     STARTUP_ENCODER                            933      51      81       1   Lib_Encoder 
+     READ_ENCODER                               984      37      55       3   Lib_Encoder 
+     DISABLE_ENCODER                            9BB      29      41       1   Lib_Encoder 
+     INITLCD                                    9E4      6F     111       1   Lib_LCD     
+     LCD_RESET                                  A53      19      25       3   Lib_LCD     
+     LCD_WRITE                                  A6C      18      24       7   Lib_LCD     
+     BF_TEST                                    A84      14      20       0   Lib_LCD     
+     LCD_READ                                   A98      14      20       2   Lib_LCD     
+     DISP_OFF                                   AAC       8       8       1   Lib_LCD     
+     DISP_ON                                    AB4       8       8       1   Lib_LCD     
+     CURSOR_ON                                  ABC       8       8       5   Lib_LCD     
+     CURSOR_OFF                                 AC4       1       1       0   Lib_LCD     
+     SETADDR                                    AC5       E      14      22   Lib_LCD     
+     GETADDR                                    AD3       C      12       6   Lib_LCD     
+     CLRSCREEN                                  ADF      1C      28       3   Lib_LCD     
+     OUTCHAR_AT                                 AFB       3       3       0   Lib_LCD     
+     OUTCHAR                                    AFE       C      12       5   Lib_LCD     
+     BS_HANDLE                                  B0A       C      12       0   Lib_LCD     
+     OUTSTRING_AT                               B16       3       3       0   Lib_LCD     
+     OUTSTRING                                  B19       2       2      10   Lib_LCD     
+     OUTLOOP                                    B1B       9       9       0   Lib_LCD     
+     OUTEXIT                                    B24       3       3       0   Lib_LCD     
+     LCDTEMPLATE                                B27      1E      30       2   Lib_LCD     
+     UPDATELCD_L1                               B45      31      49       2   Lib_LCD     
+     UPDATELCD_L2                               B76      1B      27       1   Lib_LCD     
+     INITMESS_L1                                B91      27      39       1   Lib_LCD     
+     INITMESS_L2                                BB8      28      40       1   Lib_LCD     
+     LCDTEMPLATE_L1                             BE0      29      41       1   Lib_LCD     
+     LCDTEMPLATE_L2                             C09      1D      29       1   Lib_LCD     
+     DELAY_MICRO                                C26       F      15       5   Lib_Delay   
+     MICRO_Loop                                 C35       D      13       0   Lib_Delay   
+     DELAY_MILLI                                C42       F      15       2   Lib_Delay   
+     MILLI_Loop                                 C51       D      13       0   Lib_Delay   
+     KEYREADY                                  1000       1       1       0   LIBRARY_RAM 
+     LCHARACTER                                1001       1       1       4   LIBRARY_RAM 
+     LKEY_FLG                                  1002       1       1       5   LIBRARY_RAM 
+     LVREF_BUF                                 1003       4       4       4   LIBRARY_RAM 
+     LVREF_NULL                                1007       1       1       0   LIBRARY_RAM 
+     LVACT_BUF                                 1008       4       4       4   LIBRARY_RAM 
+     LVACT_NULL                                100C       1       1       0   LIBRARY_RAM 
+     LERR_BUF                                  100D       4       4       4   LIBRARY_RAM 
+     LERR_NULL                                 1011       1       1       0   LIBRARY_RAM 
+     LEFF_BUF                                  1012       4       4       4   LIBRARY_RAM 
+     LEFF_NULL                                 1016       1       1       0   LIBRARY_RAM 
+     LKP_BUF                                   1017       5       5       7   LIBRARY_RAM 
+     LKP_NULL                                  101C       1       1       0   LIBRARY_RAM 
+     LKI_BUF                                   101D       5       5       7   LIBRARY_RAM 
+     LKI_NULL                                  1022       1       1       0   LIBRARY_RAM 
+     MOTOR_STATE                               2400       1       1       3   .data       
+     TC0_STATE                                 2401       1       1       4   .data       
+     dispstate                                 2402       1       1      16   .data       
+     KEYPAD_STATE                              2403       1       1       5   .data       
+     MASTERMIND_STATE                          2404       1       1       4   .data       
+     KEY_BUF                                   2405       1       1      11   .data       
+     KEY_FLG                                   2406       1       1      26   .data       
+     INTERVAL                                  2407       2       2       4   .data       
+     RUN                                       2409       1       1       9   .data       
+     D_ON_D_OFF                                240A       1       1       5   .data       
+     V_REF                                     240B       2       2      11   .data       
+     V_REF_BUF                                 240D       4       4       6   .data       
+     V_ACT                                     2411       2       2       6   .data       
+     VREF_PROMPT                               2413       1       1      11   .data       
+     VREF_CURSOR                               2414       1       1       4   .data       
+     KP                                        2415       2       2       7   .data       
+     KP_PROMPT                                 2417       1       1      10   .data       
+     KP_CURSOR                                 2418       1       1       5   .data       
+     KI                                        2419       2       2       9   .data       
+     KI_PROMPT                                 241B       1       1      10   .data       
+     KI_CURSOR                                 241C       1       1       5   .data       
+     FIRSTCHAR                                 241D       1       1      22   .data       
+     TAKE2COMP                                 241E       1       1       7   .data       
+     OL_CL                                     241F       1       1       7   .data       
+     BACKSPACEDISP                             2420       1       1       7   .data       
+     POINTER                                   2421       2       2      13   .data       
+     ECHO                                      2423       1       1       7   .data       
+     COUNT                                     2424       1       1      14   .data       
+     DIGIT_COUNT                               2425       1       1      25   .data       
+     DPTR                                      2426       2       2       4   .data       
+     D_VREF                                    2428       1       1       4   .data       
+     D_KP                                      2429       1       1       4   .data       
+     D_KI                                      242A       1       1       4   .data       
+     D_RUN                                     242B       1       1       5   .data       
+     D_STP                                     242C       1       1       8   .data       
+     D_CL                                      242D       1       1       6   .data       
+     D_OL                                      242E       1       1       5   .data       
+     D_D_ON                                    242F       1       1       6   .data       
+     D_D_OFF                                   2430       1       1       4   .data       
+     UPDATEDISPLAY                             2431       1       1       4   .data       
+     ENCODER_COUNT                             2432       2       2       7   .data       
+     ENCODER_COUNT_OLD                         2434       2       2       6   .data       
+     KP_ERR                                    2436       2       2       4   .data       
+     KI_ERR                                    2438       2       2       4   .data       
+     ESUM                                      243A       2       2       8   .data       
+     A_STAR                                    243C       2       2       5   .data       
+     A_INIT                                    243E       2       2       6   .data       
+     ERR                                       2440       2       2       8   .data       
+     ESUM_OLD                                  2442       2       2       3   .data       
+     EFFORT                                    2444       2       2       6   .data       
+     TEMP1                                     2446       2       2       4   .data       
+     UPDATECOUNT                               2448       1       1       4   .data       
+     TEMPADDR                                  2449       1       1       2   .data       
+     REMAIN                                    244A       2       2       0   .data       
+     main                                      4000     12C     300       1   MyCode      
+     Top                                       412C      11      17       0   MyCode      
+     MOTOR                                     413D       8       8       1   MyCode      
+     MOTOR_STATE_1                             4145      15      21       0   MyCode      
+     MOTOR_STATE_2                             415A       1       1       0   MyCode      
+     TC0_                                      415B       8       8       1   MyCode      
+     TC0_STATE_0                               4163      21      33       0   MyCode      
+     TC0_STATE_1                               4184       1       1       0   MyCode      
+     MASTERMIND                                4185       B      11       1   MyCode      
+     MASTERMIND_INIT                           4190      14      20       0   MyCode      
+     MASTERMIND_WAIT_FOR_DISPLAY               41A4       6       6       0   MyCode      
+     DISPLAYCHECK_2                            41AA       6       6       0   MyCode      
+     DISPLAYCHECK_3                            41B0       6       6       0   MyCode      
+     exit2                                     41B6       6       6       0   MyCode      
+     MASTERMIND_HUB                            41BC       5       5       0   MyCode      
+     HUBANALYZE                                41C1       6       6       0   MyCode      
+     ANALYZE                                   41C7      41      65       0   MyCode      
+     UPDATEDISP                                4208      3A      58       0   MyCode      
+     EXIT_MAST                                 4242       1       1       0   MyCode      
+     MASTERMIND_BSPACE                         4243      11      17       0   MyCode      
+     BSCONTD_VREF                              4254      20      32       0   MyCode      
+     BSCONTD_KP                                4274      20      32       0   MyCode      
+     BSCONTD_KI                                4294      20      32       0   MyCode      
+     TEST_NEGATIVE                             42B4       D      13       0   MyCode      
+     BSINVALID                                 42C1       6       6       0   MyCode      
+     MASTERMIND_ENTER                          42C7      1A      26       0   MyCode      
+     VREF_CONV                                 42E1      27      39       0   MyCode      
+     OLCL                                      4308       B      11       0   MyCode      
+     REPRINT_OL                                4313       6       6       0   MyCode      
+     REPRINTD_RUN0                             4319       7       7       0   MyCode      
+     KP_CONV                                   4320       C      12       0   MyCode      
+     KI_CONV                                   432C       C      12       0   MyCode      
+     VREF_CONVERSION                           4338      16      22       1   MyCode      
+     VREF_LOOP                                 434E      32      50       0   MyCode      
+     VREF_CONVERT_SET                          4380       8       8       0   MyCode      
+     KP_CONVERSION                             4388      12      18       1   MyCode      
+     KP_LOOP                                   439A      31      49       0   MyCode      
+     KI_CONVERSION                             43CB      12      18       1   MyCode      
+     KI_LOOP                                   43DD      36      54       0   MyCode      
+     KI_EXIT                                   4413       4       4       0   MyCode      
+     NEGATIVE_SIGN                             4417      24      36       0   MyCode      
+     MASTERMIND_DIGIT                          443B      14      20       0   MyCode      
+     VREF_DIGITS                               444F      17      23       0   MyCode      
+     VREF_CONTD1                               4466       B      11       0   MyCode      
+     VREF_CONTD                                4471      1A      26       0   MyCode      
+     INVALIDENTRY                              448B       6       6       0   MyCode      
+     KP_DIGITS                                 4491      2C      44       0   MyCode      
+     KI_DIGITS                                 44BD      2C      44       0   MyCode      
+     TOGGLEA                                   44E9      11      17       0   MyCode      
+     TURN_A_ON                                 44FA      14      20       0   MyCode      
+     TOGGLEB                                   450E      11      17       0   MyCode      
+     TURN_B_ON                                 451F       E      14       0   MyCode      
+     VREF_1                                    452D      36      54       0   MyCode      
+     KP_1                                      4563      42      66       0   MyCode      
+     KI_1                                      45A5      46      70       0   MyCode      
+     TOGGLEF                                   45EB      15      21       0   MyCode      
+     TURN_F_ON                                 4600       E      14       0   MyCode      
+     KEYPAD                                    460E       C      12       2   MyCode      
+     KEYPAD_STATE_0                            461A       C      12       0   MyCode      
+     KEYPAD_STATE_1                            4626      16      22       0   MyCode      
+     KEYPAD_STATE_2                            463C       6       6       0   MyCode      
+     set1                                      4642       6       6       0   MyCode      
+     exit                                      4648       1       1       0   MyCode      
+     DISPLAY                                   4649      4F      79       1   MyCode      
+     INIT                                      4698       6       6       0   MyCode      
+     dispstate1                                469E      63      99       0   MyCode      
+     dispstate2                                4701      1D      29       0   MyCode      
+     dispstate3                                471E      12      18       0   MyCode      
+     dispstate4                                4730       F      15       0   MyCode      
+     regular4                                  473F       3       3       0   MyCode      
+     bottom4                                   4742      12      18       0   MyCode      
+     exit4                                     4754       1       1       0   MyCode      
+     dispstate4a                               4755      11      17       0   MyCode      
+     dispstate5                                4766       F      15       0   MyCode      
+     regular5                                  4775       3       3       0   MyCode      
+     bottom5                                   4778      12      18       0   MyCode      
+     exit5                                     478A       1       1       0   MyCode      
+     dispstate5a                               478B      11      17       0   MyCode      
+     dispstate6                                479C       F      15       0   MyCode      
+     regular6                                  47AB       3       3       0   MyCode      
+     bottom6                                   47AE      12      18       0   MyCode      
+     exit6                                     47C0       1       1       0   MyCode      
+     dispstate6a                               47C1      11      17       0   MyCode      
+     dispstate7                                47D2       F      15       0   MyCode      
+     regular7                                  47E1       3       3       0   MyCode      
+     bottom7                                   47E4       D      13       0   MyCode      
+     exit7                                     47F1       1       1       0   MyCode      
+     dispstate8                                47F2       F      15       0   MyCode      
+     regular8                                  4801       3       3       0   MyCode      
+     bottom8                                   4804      14      20       0   MyCode      
+     clear8                                    4818       3       3       0   MyCode      
+     exit8                                     481B       1       1       0   MyCode      
+     RESET_KI_ADDRESS                          481C       7       7       0   MyCode      
+     RESET_KP_ADDRESS                          4823       7       7       0   MyCode      
+     dispstate9                                482A       F      15       0   MyCode      
+     regular9                                  4839       3       3       0   MyCode      
+     bottom9                                   483C       D      13       0   MyCode      
+     exit9                                     4849       1       1       0   MyCode      
+     dispstate10                               484A       F      15       0   MyCode      
+     regular10                                 4859       3       3       0   MyCode      
+     bottom10                                  485C       D      13       0   MyCode      
+     exit10                                    4869       1       1       0   MyCode      
+     dispstate11                               486A       F      15       0   MyCode      
+     regular11                                 4879       3       3       0   MyCode      
+     bottom11                                  487C       D      13       0   MyCode      
+     exit11                                    4889       1       1       0   MyCode      
+     dispstate12                               488A       F      15       0   MyCode      
+     regular12                                 4899       3       3       0   MyCode      
+     bottom12                                  489C       D      13       0   MyCode      
+     exit12                                    48A9       1       1       0   MyCode      
+     putchar                                   48AA      10      16       9   MyCode      
+     exit1                                     48BA       6       6       0   MyCode      
+     putchar_1                                 48C0       A      10       9   MyCode      
+     BINARY2ASCII                              48CA      20      32       4   MyCode      
+     subloop                                   48EA      18      24       0   MyCode      
+     subfill                                   4902       E      14       0   MyCode      
+     subloadneg                                4910       C      12       0   MyCode      
+     interrupt                                 491C      17      23       1   MyCode      
+     NOUPDATE                                  4933      33      51       0   MyCode      
+     CLOSED_LOOP                               4966       9       9       0   MyCode      
+     next_one                                  496F      14      20       0   MyCode      
+     SATURATION                                4983       E      14       0   MyCode      
+     Negative                                  4991       6       6       0   MyCode      
+     Integral_Calc                             4997      1A      26       0   MyCode      
+     pos                                       49B1       6       6       0   MyCode      
+     done                                      49B7      1E      30       0   MyCode      
+     SATURATION_1                              49D5       E      14       0   MyCode      
+     Negative_1                                49E3       6       6       0   MyCode      
+     FINAL_ADD                                 49E9      1A      26       0   MyCode      
+     pos_1                                     4A03       6       6       0   MyCode      
+     done_1                                    4A09      19      25       0   MyCode      
+     SAT_HIGH                                  4A22       8       8       0   MyCode      
+     SAT_LOW                                   4A2A       8       8       0   MyCode      
+     A_STAR_SET                                4A32      16      22       0   MyCode      
+     EFFORT_SET                                4A48      11      17       0   MyCode      
+     NOT_YET                                   4A59      35      53       0   MyCode      
+     VREF_MESS                                 4A8E      29      41       1   MyCode      
+     FIVEBLANKS                                4AB7       6       6       2   MyCode      
+     RUN_MESS                                  4ABD       4       4       1   MyCode      
+     STP_MESS                                  4AC1       4       4       1   MyCode      
+     OL_MESS                                   4AC5       3       3       1   MyCode      
+     CL_MESS                                   4AC8       3       3       1   MyCode      
+     D_ON_MESS                                 4ACB       6       6       1   MyCode      
+     D_OFF_MESS                                4AD1       6       6       1   MyCode      
+     Entry                                     C000       0       0       1   .init       
+     _Startup                                  C000      13      19       0   .init       
+     STARTUP_PLL                               C013      20      32       1   .init       
+     STARTUP_SPI0                              C033      45      69       1   .init       
+     STARTUP_ATD1                              C078      1A      26       0   .init       
+     STARTUP_PWM                               C092      1D      29       1   .init       
+     STARTUP_IO                                C0AF      34      52       1   .init       
+     VAR00003                                  FFCE       2       2       0   .text       
+     VAR00002                                  FFEE       2       2       0   .text       
+     VAR00001                                  FFFE       2       2       0   .text       
+
+*********************************************************************************************
+UNUSED-OBJECTS SECTION
+---------------------------------------------------------------------------------------------
+
+*********************************************************************************************
+COPYDOWN SECTION
+---------------------------------------------------------------------------------------------
+
+*********************************************************************************************
+OBJECT-DEPENDENCIES SECTION
+---------------------------------------------------------------------------------------------
+STARTUP_MOTOR             USES DISABLE_MOTOR 
+INITKEY                   USES LCHARACTER LKEY_FLG 
+GETCHAR                   USES LCHARACTER LKEY_FLG 
+ISR_KEYPAD                USES VAR00001 LCHARACTER LKEY_FLG 
+INITLCD                   USES LVREF_BUF LVACT_BUF LERR_BUF LEFF_BUF LKI_BUF 
+                                LKP_BUF LCD_RESET DELAY_MICRO LCD_WRITE DISP_OFF 
+                                CLRSCREEN DISP_ON SETADDR INITMESS_L1 OUTSTRING 
+                                INITMESS_L2 DELAY_MILLI 
+BF_TEST                   USES LCD_READ DELAY_MICRO 
+DISP_OFF                  USES LCD_WRITE 
+DISP_ON                   USES LCD_WRITE 
+CURSOR_ON                 USES LCD_WRITE 
+SETADDR                   USES LCD_WRITE 
+GETADDR                   USES LCD_READ 
+CLRSCREEN                 USES LCD_WRITE GETADDR SETADDR OUTCHAR 
+OUTCHAR_AT                USES SETADDR 
+OUTCHAR                   USES LCD_WRITE 
+BS_HANDLE                 USES GETADDR SETADDR 
+OUTSTRING_AT              USES SETADDR 
+OUTLOOP                   USES OUTCHAR 
+LCDTEMPLATE               USES CLRSCREEN SETADDR LCDTEMPLATE_L1 OUTSTRING 
+                                LCDTEMPLATE_L2 
+UPDATELCD_L1              USES SETADDR LVREF_BUF OUTSTRING LVACT_BUF LERR_BUF 
+                                LEFF_BUF 
+UPDATELCD_L2              USES SETADDR LKP_BUF OUTSTRING LKI_BUF 
+main                      USES MOTOR_STATE TC0_STATE LKEY_FLG dispstate 
+                                KEYPAD_STATE MASTERMIND_STATE VREF_PROMPT VREF_CURSOR 
+                                KP_PROMPT KP_CURSOR KI_PROMPT KI_CURSOR TAKE2COMP ECHO 
+                                COUNT DIGIT_COUNT D_VREF D_KP D_KI D_D_OFF D_OL 
+                                D_RUN BACKSPACEDISP UPDATEDISPLAY RUN FIRSTCHAR 
+                                LVREF_BUF LVACT_BUF LERR_BUF LEFF_BUF LKP_BUF LKI_BUF 
+                                EFFORT ERR V_ACT V_REF KI KP INTERVAL 
+                                ENCODER_COUNT_OLD ESUM ESUM_OLD OL_CL D_ON_D_OFF UPDATECOUNT 
+                                D_D_ON D_CL D_STP 
+Top                       USES MOTOR TC0_ MASTERMIND KEYPAD DISPLAY 
+MOTOR                     USES MOTOR_STATE 
+MOTOR_STATE_1             USES ENCODER_COUNT STARTUP_PWM STARTUP_MOTOR 
+                                ENABLE_MOTOR STARTUP_ENCODER MOTOR_STATE 
+TC0_                      USES TC0_STATE 
+TC0_STATE_0               USES INTERVAL TC0_STATE 
+MASTERMIND                USES MASTERMIND_STATE 
+MASTERMIND_INIT           USES KEYPAD INITLCD LCDTEMPLATE MASTERMIND_STATE 
+                                FIRSTCHAR 
+MASTERMIND_WAIT_FOR_DISPLAY USES D_STP 
+DISPLAYCHECK_2            USES D_CL 
+DISPLAYCHECK_3            USES D_D_ON 
+exit2                     USES MASTERMIND_STATE 
+MASTERMIND_HUB            USES UPDATEDISPLAY 
+HUBANALYZE                USES KEY_FLG 
+ANALYZE                   USES KEY_BUF 
+UPDATEDISP                USES V_REF LVREF_BUF BINARY2ASCII ERR LERR_BUF 
+                                EFFORT LEFF_BUF V_ACT LVACT_BUF GETADDR TEMPADDR 
+                                UPDATELCD_L1 SETADDR UPDATEDISPLAY 
+MASTERMIND_BSPACE         USES VREF_PROMPT KP_PROMPT KI_PROMPT 
+BSCONTD_VREF              USES DIGIT_COUNT V_REF_BUF BACKSPACEDISP POINTER 
+                                KEY_FLG 
+BSCONTD_KP                USES DIGIT_COUNT LKP_BUF BACKSPACEDISP POINTER 
+                                KEY_FLG 
+BSCONTD_KI                USES DIGIT_COUNT LKI_BUF BACKSPACEDISP POINTER 
+                                KEY_FLG 
+TEST_NEGATIVE             USES TAKE2COMP BACKSPACEDISP 
+BSINVALID                 USES KEY_FLG 
+MASTERMIND_ENTER          USES DIGIT_COUNT VREF_PROMPT KP_PROMPT KI_PROMPT 
+                                KEY_FLG 
+VREF_CONV                 USES VREF_CONVERSION VREF_PROMPT DIGIT_COUNT KEY_FLG 
+                                TAKE2COMP LCDTEMPLATE UPDATELCD_L1 UPDATELCD_L2 D_D_ON 
+                                RUN D_RUN 
+OLCL                      USES OL_CL D_CL 
+REPRINT_OL                USES D_OL 
+REPRINTD_RUN0             USES D_STP 
+KP_CONV                   USES KP_CONVERSION DIGIT_COUNT KEY_FLG 
+KI_CONV                   USES KI_CONVERSION DIGIT_COUNT KEY_FLG 
+VREF_CONVERSION           USES V_REF_BUF POINTER DIGIT_COUNT COUNT V_REF 
+VREF_LOOP                 USES V_REF POINTER COUNT TAKE2COMP 
+VREF_CONVERT_SET          USES VREF_PROMPT 
+KP_CONVERSION             USES LKP_BUF POINTER DIGIT_COUNT COUNT KP 
+KP_LOOP                   USES KP POINTER COUNT KP_PROMPT 
+KI_CONVERSION             USES LKI_BUF POINTER DIGIT_COUNT COUNT KI 
+KI_LOOP                   USES KI POINTER COUNT OL_CL 
+KI_EXIT                   USES KI_PROMPT 
+NEGATIVE_SIGN             USES VREF_PROMPT DIGIT_COUNT V_REF_BUF KEY_BUF ECHO 
+                                TAKE2COMP KEY_FLG 
+MASTERMIND_DIGIT          USES VREF_PROMPT KP_PROMPT KI_PROMPT KEY_BUF 
+VREF_DIGITS               USES DIGIT_COUNT TAKE2COMP V_REF_BUF 
+VREF_CONTD1               USES KEY_BUF 
+VREF_CONTD                USES V_REF_BUF DIGIT_COUNT KEY_BUF ECHO KEY_FLG 
+INVALIDENTRY              USES KEY_FLG 
+KP_DIGITS                 USES DIGIT_COUNT KEY_BUF LKP_BUF ECHO KEY_FLG 
+KI_DIGITS                 USES DIGIT_COUNT KEY_BUF LKI_BUF ECHO KEY_FLG 
+TOGGLEA                   USES RUN D_STP KEY_FLG 
+TURN_A_ON                 USES KEY_FLG RUN D_RUN READ_ENCODER 
+                                ENCODER_COUNT_OLD 
+TOGGLEB                   USES D_ON_D_OFF D_D_OFF KEY_FLG 
+TURN_B_ON                 USES D_D_ON KEY_FLG D_ON_D_OFF 
+VREF_1                    USES VREF_PROMPT KP_PROMPT KI_PROMPT V_REF_BUF 
+                                D_VREF KEY_FLG 
+KP_1                      USES VREF_PROMPT KP_PROMPT KI_PROMPT RUN D_STP 
+                                LKP_BUF D_KP KEY_FLG 
+KI_1                      USES VREF_PROMPT KP_PROMPT KI_PROMPT RUN D_STP 
+                                LKI_BUF D_KI KEY_FLG 
+TOGGLEF                   USES OL_CL KI D_OL KEY_FLG 
+TURN_F_ON                 USES KEY_FLG OL_CL D_CL 
+KEYPAD                    USES KEYPAD_STATE 
+KEYPAD_STATE_0            USES INITKEY CURSOR_ON KEYPAD_STATE 
+KEYPAD_STATE_1            USES LKEY_FLG GETCHAR KEY_BUF KEY_FLG KEYPAD_STATE 
+KEYPAD_STATE_2            USES KEY_FLG 
+set1                      USES KEYPAD_STATE 
+DISPLAY                   USES dispstate 
+INIT                      USES dispstate 
+dispstate1                USES BACKSPACEDISP ECHO D_VREF VREF_CURSOR D_KP 
+                                KP_CURSOR D_KI KI_CURSOR D_RUN D_STP D_CL D_OL D_D_ON 
+                                D_D_OFF 
+dispstate2                USES GETADDR SETADDR DPTR OUTCHAR CURSOR_ON 
+                                BACKSPACEDISP 
+dispstate3                USES GETADDR KEY_BUF OUTCHAR dispstate ECHO 
+dispstate4                USES FIRSTCHAR VREF_MESS putchar_1 
+regular4                  USES putchar 
+bottom4                   USES FIRSTCHAR dispstate D_VREF VREF_CURSOR 
+dispstate4a               USES SETADDR CURSOR_ON dispstate VREF_CURSOR 
+dispstate5                USES FIRSTCHAR FIVEBLANKS putchar_1 
+regular5                  USES putchar 
+bottom5                   USES FIRSTCHAR dispstate D_KP KP_CURSOR 
+dispstate5a               USES SETADDR CURSOR_ON dispstate KP_CURSOR 
+dispstate6                USES FIRSTCHAR FIVEBLANKS putchar_1 
+regular6                  USES putchar 
+bottom6                   USES FIRSTCHAR dispstate D_KI KI_CURSOR 
+dispstate6a               USES SETADDR CURSOR_ON dispstate KI_CURSOR 
+dispstate7                USES FIRSTCHAR RUN_MESS putchar_1 
+regular7                  USES putchar 
+bottom7                   USES FIRSTCHAR dispstate D_RUN 
+dispstate8                USES FIRSTCHAR STP_MESS putchar_1 
+regular8                  USES putchar 
+bottom8                   USES FIRSTCHAR dispstate KI_PROMPT KP_PROMPT 
+clear8                    USES D_STP 
+RESET_KI_ADDRESS          USES KI_CURSOR 
+RESET_KP_ADDRESS          USES KP_CURSOR 
+dispstate9                USES FIRSTCHAR CL_MESS putchar_1 
+regular9                  USES putchar 
+bottom9                   USES FIRSTCHAR dispstate D_CL 
+dispstate10               USES FIRSTCHAR OL_MESS putchar_1 
+regular10                 USES putchar 
+bottom10                  USES FIRSTCHAR dispstate D_OL 
+dispstate11               USES FIRSTCHAR D_ON_MESS putchar_1 
+regular11                 USES putchar 
+bottom11                  USES FIRSTCHAR dispstate D_D_ON 
+dispstate12               USES FIRSTCHAR D_OFF_MESS putchar_1 
+regular12                 USES putchar 
+bottom12                  USES FIRSTCHAR dispstate D_D_OFF 
+putchar                   USES DPTR OUTCHAR 
+exit1                     USES FIRSTCHAR 
+putchar_1                 USES DPTR SETADDR FIRSTCHAR 
+BINARY2ASCII              USES COUNT TEMP1 
+subloop                   USES TEMP1 COUNT 
+subfill                   USES COUNT 
+subloadneg                USES TEMP1 
+interrupt                 USES D_ON_D_OFF UPDATECOUNT UPDATEDISPLAY 
+NOUPDATE                  USES RUN READ_ENCODER ENCODER_COUNT 
+                                ENCODER_COUNT_OLD V_ACT OUTDACA OL_CL V_REF ERR 
+CLOSED_LOOP               USES V_REF V_ACT ERR 
+next_one                  USES ERR KP KP_ERR 
+SATURATION                USES ERR KP_ERR 
+Negative                  USES KP_ERR 
+Integral_Calc             USES ESUM_OLD ERR ESUM 
+pos                       USES ESUM 
+done                      USES ESUM ESUM_OLD KI KI_ERR 
+SATURATION_1              USES ESUM KI_ERR 
+Negative_1                USES KI_ERR 
+FINAL_ADD                 USES KI_ERR KP_ERR A_INIT 
+pos_1                     USES A_INIT 
+done_1                    USES A_INIT A_STAR 
+SAT_HIGH                  USES A_STAR 
+SAT_LOW                   USES A_STAR 
+A_STAR_SET                USES A_STAR EFFORT 
+EFFORT_SET                USES A_STAR UPDATE_MOTOR INTERVAL 
+NOT_YET                   USES READ_ENCODER ENCODER_COUNT ENCODER_COUNT_OLD 
+                                V_ACT V_REF ERR EFFORT UPDATE_MOTOR INTERVAL 
+_Startup                  USES __SEG_END_SSTACK STARTUP_PLL STARTUP_IO 
+                                STARTUP_SPI0 DISABLE_ENCODER main 
+STARTUP_SPI0              USES DELAY_MILLI 
+STARTUP_ATD1              USES DELAY_MICRO 
+
+*********************************************************************************************
+DEPENDENCY TREE
+*********************************************************************************************
+ main and _Startup Group
+ | 
+ +- main                
+ |    
+ +- Entry               
+      
+ _ORG00001           
+ | 
+ +- Entry                (see above)
+    
+ _ORG00002           
+ | 
+ +- interrupt           
+      
+ _ORG00003           
+ | 
+ +- ISR_KEYPAD          
+    | 
+    +- VAR00001            
+         
+*********************************************************************************************
+STATISTIC SECTION
+---------------------------------------------------------------------------------------------
+
+ExeFile:
+--------
+Number of blocks to be downloaded: 11
+Total size of all blocks to be downloaded: 4126
+
